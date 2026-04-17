@@ -316,7 +316,7 @@ namespace ASLTv1.Forms
                 }
 
                 UpdateTimeLabels();
-                labelTitle.Text = $"ASLT(v1.0) - {Path.GetFileName(filePath)}";
+                // 제목은 "ASLT(v1.0)"으로 고정 — 영상 파일명 표기하지 않음 (사용자 요청)
 
                 this.Focus();
                 this.Activate();
