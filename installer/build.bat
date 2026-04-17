@@ -6,9 +6,10 @@ REM Prereqs: .NET 8 SDK, Inno Setup 6.x (ISCC.exe), installer\ffmpeg\ffmpeg.exe 
 
 setlocal
 set REPO_ROOT=%~dp0..
+set PUBLISH_DIR=%REPO_ROOT%\bin\Release\net8.0-windows\win-x64\publish
 set ISCC="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 
-echo [1/3] Verifying prerequisites...
+echo [1/5] Verifying prerequisites...
 if not exist "%~dp0ffmpeg\ffmpeg.exe" (
   echo ERROR: installer\ffmpeg\ffmpeg.exe not found. Download from https://www.gyan.dev/ffmpeg/builds/ ^(essentials, win-x64^) and place ffmpeg.exe in installer\ffmpeg\.
   exit /b 1
@@ -18,7 +19,11 @@ if not exist %ISCC% (
   exit /b 1
 )
 
-echo [2/3] Running dotnet publish ^(self-contained x64^)...
+echo [2/5] Cleaning stale publish output...
+if exist "%PUBLISH_DIR%" rd /s /q "%PUBLISH_DIR%"
+if exist "%~dp0Output" rd /s /q "%~dp0Output"
+
+echo [3/5] Running dotnet publish ^(self-contained x64^)...
 pushd "%REPO_ROOT%"
 dotnet publish ASLTv1.0.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false
 if errorlevel 1 (
@@ -28,11 +33,41 @@ if errorlevel 1 (
 )
 popd
 
-echo [3/3] Compiling Inno Setup script...
+echo [4/5] Verifying publish output integrity...
+if not exist "%PUBLISH_DIR%\ASLTv1.exe" (
+  echo ERROR: ASLTv1.exe missing from publish output.
+  exit /b 1
+)
+if not exist "%PUBLISH_DIR%\coreclr.dll" (
+  echo ERROR: coreclr.dll missing - self-contained publish is broken.
+  exit /b 1
+)
+if not exist "%PUBLISH_DIR%\OpenCvSharpExtern.dll" (
+  echo ERROR: OpenCvSharpExtern.dll missing - OpenCV native runtime absent.
+  exit /b 1
+)
+REM Count files: self-contained publish should produce 400+ files
+for /f %%A in ('dir /a-d /b /s "%PUBLISH_DIR%" ^| find /c /v ""') do set FILE_COUNT=%%A
+if %FILE_COUNT% LSS 400 (
+  echo ERROR: Publish produced only %FILE_COUNT% files. Expected 400+ for self-contained build.
+  exit /b 1
+)
+echo Publish verified: %FILE_COUNT% files present.
+
+echo [5/5] Compiling Inno Setup script...
 %ISCC% "%~dp0ASLT-Setup.iss"
 if errorlevel 1 (
   echo ERROR: ISCC compile failed.
   exit /b 1
+)
+
+REM Installer size sanity check (expected 90-150 MB with LZMA2 solid compression)
+for %%F in ("%~dp0Output\ASLT-Setup-v1.0.0.exe") do set INSTALLER_SIZE=%%~zF
+set /a INSTALLER_MB=%INSTALLER_SIZE% / 1048576
+echo Installer size: %INSTALLER_MB% MB
+if %INSTALLER_MB% LSS 80 (
+  echo WARNING: Installer is only %INSTALLER_MB% MB, expected 90-150 MB.
+  echo This may indicate missing payload. Verify publish content manually.
 )
 
 echo.

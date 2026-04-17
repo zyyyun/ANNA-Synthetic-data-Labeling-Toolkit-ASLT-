@@ -20,12 +20,16 @@ namespace ASLTv1.Services
 
         /// <summary>
         /// Serilog 로거를 초기화한다.
-        /// 실행 폴더 아래 logs/ 디렉터리에 날짜별 로그 파일(AOLT-yyyy-MM-dd.log)을 생성한다.
+        /// %LOCALAPPDATA%\ANNA\ASLT\logs 디렉터리에 날짜별 로그 파일(AOLT-yyyy-MM-dd.log)을 생성한다.
+        /// 일반 사용자 권한으로 쓰기 가능한 표준 위치 — Program Files 설치 시에도 정상 동작.
         /// 30일 초과 로그 파일은 자동 삭제된다.
         /// </summary>
         public static void Initialize()
         {
-            string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+            // RELI fix: Program Files 아래 설치 시 app 폴더 쓰기 불가 → LocalAppData 사용
+            string logDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "ANNA", "ASLT", "logs");
             Directory.CreateDirectory(logDir);
 
             Log.Logger = new LoggerConfiguration()
