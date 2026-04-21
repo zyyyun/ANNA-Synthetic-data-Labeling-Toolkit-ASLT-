@@ -66,7 +66,12 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,ASLT}"; Flags
 
 [UninstallDelete]
 ; D-15: Remove everything under <InstallDir> including logs/ — but NOT user JSON outside InstallDir
+; Legacy path (pre-84c498e builds wrote logs here)
 Type: filesandordirs; Name: "{app}\logs"
 Type: filesandordirs; Name: "{app}\ffmpeg"
+; Runtime logs moved to LocalAppData in 84c498e — clean those on uninstall too
+Type: filesandordirs; Name: "{localappdata}\ANNA\ASLT\logs"
+Type: dirifempty; Name: "{localappdata}\ANNA\ASLT"
+Type: dirifempty; Name: "{localappdata}\ANNA"
 ; Final sweep: any leftover files inside {app} that were created post-install
 Type: dirifempty; Name: "{app}"
