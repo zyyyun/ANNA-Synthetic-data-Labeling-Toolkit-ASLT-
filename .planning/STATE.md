@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05.5-01-PLAN.md
-last_updated: "2026-04-17T06:44:02.207Z"
-last_activity: 2026-04-17 -- Phase null execution started
+stopped_at: Completed quick/260421-mzz-codex-installer-uninstall-build-bat
+last_updated: "2026-04-21T07:39:44Z"
+last_activity: 2026-04-21
 progress:
   total_phases: 7
   completed_phases: 6
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 
 ## Current Position
 
-Phase: null — EXECUTING
-Plan: 1 of ?
+Phase: 6
+Plan: Not started
 Status: Executing Phase null
-Last activity: 2026-04-17 -- Phase null execution started
+Last activity: 2026-04-21 (quick 260421-mzz)
 
 Progress: [████████░░] 80%
 
@@ -63,6 +63,7 @@ Progress: [████████░░] 80%
 | Phase 05 P01 | 4min | 2 tasks | 3 files |
 | Phase 05 P02 | ~5 minutes | 3 tasks | 4 files |
 | Phase 05.5 P01 | 2min | 2 tasks | 1 files |
+| Quick 260421-mzz | 2min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,9 @@ Recent decisions affecting current work:
 - [Phase 05]: AppId pinned to fixed GUID for in-place 1.0.x upgrades; no custom [Registry] or SignTool directives (clean uninstall per D-14, no signing per D-10).
 - [Phase 05.5]: Waypoint 선택 상태 감지로 Entry/Exit 버튼 이중 기능 구현 (USAB-09)
 - [Phase 05.5]: !_videoService.IsVideoLoaded 단일 가드로 타임라인 경합 방지 (RELI-06)
+- [Quick 260421-mzz]: Inno Setup {localappdata} + dirifempty sweep — per-user runtime log cleanup on uninstall (CODEX-P1)
+- [Quick 260421-mzz]: build.bat name-based checks as sole correctness gate — file count removed as brittle SDK-layout dependency (CODEX-P2)
+- [Quick 260421-mzz]: build.bat wildcard installer resolution + 'if not defined' guard — version-agnostic, no silent 0 MB success (CODEX-P3)
 
 ### Pending Todos
 
@@ -99,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-17T06:44:02.201Z
-Stopped at: Completed 05.5-01-PLAN.md
+Last session: 2026-04-21T07:39:44Z
+Stopped at: Completed quick/260421-mzz-codex-installer-uninstall-build-bat
 Resume file: None
