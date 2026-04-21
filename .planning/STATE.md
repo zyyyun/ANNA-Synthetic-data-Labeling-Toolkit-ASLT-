@@ -101,6 +101,12 @@ None yet.
 
 None yet.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260421-mzz | Codex 교차검증 후속 정리 — installer uninstall + build.bat 내구성 | 2026-04-21 | ef84820 | [260421-mzz-codex-installer-uninstall-build-bat](./quick/260421-mzz-codex-installer-uninstall-build-bat/) |
+
 ## Session Continuity
 
 Last session: 2026-04-21T07:39:44Z
