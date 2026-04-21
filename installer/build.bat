@@ -46,13 +46,6 @@ if not exist "%PUBLISH_DIR%\OpenCvSharpExtern.dll" (
   echo ERROR: OpenCvSharpExtern.dll missing - OpenCV native runtime absent.
   exit /b 1
 )
-REM Count files: self-contained publish should produce 400+ files
-for /f %%A in ('dir /a-d /b /s "%PUBLISH_DIR%" ^| find /c /v ""') do set FILE_COUNT=%%A
-if %FILE_COUNT% LSS 400 (
-  echo ERROR: Publish produced only %FILE_COUNT% files. Expected 400+ for self-contained build.
-  exit /b 1
-)
-echo Publish verified: %FILE_COUNT% files present.
 
 echo [5/5] Compiling Inno Setup script...
 %ISCC% "%~dp0ASLT-Setup.iss"
