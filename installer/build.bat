@@ -1,7 +1,7 @@
 @echo off
 REM ASLT Installer Build Script
 REM Runs: dotnet publish (self-contained x64) -> Inno Setup ISCC compile
-REM Output: installer\Output\ASLT-Setup-v1.0.0.exe
+REM Output: installer\Output\ASLT-Setup-v{MyAppVersion}.exe
 REM Prereqs: .NET 8 SDK, Inno Setup 6.x (ISCC.exe), installer\ffmpeg\ffmpeg.exe placed manually
 
 setlocal
@@ -55,7 +55,16 @@ if errorlevel 1 (
 )
 
 REM Installer size sanity check (expected 90-150 MB with LZMA2 solid compression)
-for %%F in ("%~dp0Output\ASLT-Setup-v1.0.0.exe") do set INSTALLER_SIZE=%%~zF
+set INSTALLER_PATH=
+set INSTALLER_SIZE=0
+for %%F in ("%~dp0Output\ASLT-Setup-v*.exe") do (
+  set INSTALLER_PATH=%%F
+  set INSTALLER_SIZE=%%~zF
+)
+if not defined INSTALLER_PATH (
+  echo ERROR: No installer produced in Output\.
+  exit /b 1
+)
 set /a INSTALLER_MB=%INSTALLER_SIZE% / 1048576
 echo Installer size: %INSTALLER_MB% MB
 if %INSTALLER_MB% LSS 80 (
@@ -65,5 +74,5 @@ if %INSTALLER_MB% LSS 80 (
 
 echo.
 echo BUILD SUCCESS.
-echo Installer: %~dp0Output\ASLT-Setup-v1.0.0.exe
+echo Installer: %INSTALLER_PATH%
 endlocal
