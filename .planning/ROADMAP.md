@@ -144,10 +144,13 @@ Plans:
   10. 최초 실행 시 "동영상 선택 → BBOX 생성 → Entry/Exit 설정" 가이드 UI가 표시된다
   11. 지원하지 않는 파일 확장자 선택 시 오류 메시지가 전부 한국어로 출력된다
   12. 시스템 주요 동작 로그(영상 로드/BBOX 생성·삭제/Waypoint/Export/예외 등)가 감사 이벤트로 기록되고 HMAC 기반 무결성 체인으로 변조를 검출할 수 있다
-**Plans**: TBD (플랜 작성 대기)
-
+**Plans**: 5 plans
 Plans:
-- [ ] TBD — `/gsd:plan-phase 5.6` 로 분할 예정 (예상 5개: ID관리, BBOX/Waypoint/JSON, 크래시가드, 사용성, 보안로깅)
+- [ ] 05.6-01-crash-guard-PLAN.md — DF-1-13 영상 미로드 + Entry/Exit 크래시 가드 (btnEntry/Exit_Click + Keys.E/X)
+- [ ] 05.6-02-id-subsystem-PLAN.md — ID 관리 재설계 (NEW-01~07): ChangeBoxIdOnly, Ctrl+N 신규, Event 불일치 경고, 포커스 가드, Person NumericUpDown, BBOX 생성 ID 승계
+- [ ] 05.6-03-bbox-waypoint-json-PLAN.md — Waypoint 동반 삭제 + Empty JSON 방지 + 영상 전환 롤백 삭제 (DF-1-03, 04, 05, 16)
+- [ ] 05.6-04-usability-PLAN.md — 온보딩 가이드 + 한국어 메시지 + Waypoint 일괄 삭제 + Tab/Undo UAT 체크포인트 (DF-1-06, 07, 11, 14, 18)
+- [ ] 05.6-05-secure-logging-PLAN.md — 감사 이벤트 9종 확장 + HMAC 무결성 체인 + 키 관리 + 검증 유틸 (DF-1-17)
 
 ### Phase 6: 문서화
 **Goal**: 잠긴 바이너리와 완전히 일치하는 제품설명서 및 사용자취급설명서가 완성된다
@@ -172,5 +175,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 5.5 → 5.6 → 6
 | 4. 성능 + 사용성 | 3/3 | Complete   | 2026-04-17 |
 | 5. 이식성 | 2/2 | Complete   | 2026-04-17 |
 | 5.5. 기능 보정 + 안정화 | 1/2 | In progress | - |
-| 5.6. 결함수정 (INSERTED) | 0/TBD | Not planned | - |
+| 5.6. 결함수정 (INSERTED) | 0/5 | Planned | - |
 | 6. 문서화 | 0/TBD | Not started | - |
