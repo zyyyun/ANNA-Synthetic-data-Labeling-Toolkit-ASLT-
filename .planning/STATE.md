@@ -93,6 +93,10 @@ Recent decisions affecting current work:
 - [Quick 260421-mzz]: build.bat name-based checks as sole correctness gate — file count removed as brittle SDK-layout dependency (CODEX-P2)
 - [Quick 260421-mzz]: build.bat wildcard installer resolution + 'if not defined' guard — version-agnostic, no silent 0 MB success (CODEX-P3)
 
+### Roadmap Evolution
+
+- Phase 5.6 inserted after Phase 5 (2026-04-23): 결함수정 (URGENT) — KTC 1차 결함보고서 + QA팀 발견 결함 17건. 상세 `.planning/DEFECTS-INBOX.md`. 실행 순서: 05.5 → **5.6** → 6 (원본 로드맵 `1→2→3→4→5→5.5→6`에 5.6 삽입).
+
 ### Pending Todos
 
 None yet.

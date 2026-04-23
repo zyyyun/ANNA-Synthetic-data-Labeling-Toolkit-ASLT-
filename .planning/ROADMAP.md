@@ -121,6 +121,34 @@ Plans:
 - [x] 05.5-01-PLAN.md — Entry/Exit 버튼 이중 기능 분기 (USAB-09) + 타임라인 로드 가드 (RELI-06)
 - [ ] 05.5-02-PLAN.md — RELI-06 gap closure: _isVideoReady 통합 가드 + 중복 LoadFrame(0) 제거 + 자동재생 연기
 
+### Phase 5.6: 결함수정 (INSERTED)
+**Goal**: KTC 1차 결함보고서 주황색 결함 및 QA팀 발견 결함을 수정하여 GS인증 1등급 기준(ISO/IEC 25023 8대 품질 특성)을 결함 없이 충족한다
+**Depends on**: Phase 5
+**Requirements**: 결함 17건 — 상세 `.planning/DEFECTS-INBOX.md` 참조
+  - **크래시/치명**: DF-1-13 (영상 미로드 + Entry 클릭 시 TimeSpan NaN unhandled exception)
+  - **ID 관리 계열 (신규)**: NEW-01~07 (BBOX 생성 후 사후 ID 지정 시 Entry-Exit 유지 실패, Event ID 불일치 경고 누락, Ctrl+N 유령 단축키 실구현, ID 변경 단축키 포커스 미동작, 라벨 사이드바 수동 변경 시 클래스 전체 변경, 다중 BBOX ID 수렴 버그)
+  - **BBOX/Waypoint/JSON 정합성**: DF-1-03, 04, 05 (+ DF-1-16 검증)
+  - **사용성**: DF-1-06(Tab 문서), 07(Ctrl+Z 검증), 11(온보딩), 14(메시지 한국어화), 18(Waypoint 일괄 삭제)
+  - **보안**: DF-1-17 (감사 이벤트 확장 + HMAC 무결성 체인)
+  - **제외**: DF-1-12 는 Phase 6-문서화에서 처리 (플랜 이월)
+**Success Criteria** (what must be TRUE):
+  1. 영상 미로드 상태에서 Entry/Exit 클릭 시 unhandled exception 없이 안내 메시지가 표시된다
+  2. BBOX 생성 → 사후 ID 지정 → Entry 설정 후 Exit 프레임 BBOX 생성 시 Entry 지정 ID가 유지된다
+  3. 선택된 개별 BBOX의 ID만 변경되고, 같은 클래스·같은 ID의 다른 박스는 영향받지 않는다
+  4. Ctrl+N 입력 시 Exit 프레임 BBOX의 ID가 Entry 프레임 BBOX의 ID와 자동 일치된다
+  5. Entry-Exit ID 불일치 시 Person/Vehicle/Event 모두 경고 메시지가 표시된다
+  6. Waypoint 구간 내 BBOX를 전부 삭제할 때 Waypoint 동반 삭제 여부를 묻는 프롬프트가 표시되고 선택 결과가 즉시 반영된다
+  7. Waypoint/BBOX 없는 상태로 JSON 저장 시도 시 "해당 JSON 파일은 삭제됩니다 — 삭제하시겠습니까?" 프롬프트가 제공되고 선택이 파일 상태에 반영된다
+  8. 영상 전환 시 "저장하지 않은 편집이 있습니다…" 프롬프트에서 "아니요" 선택 시 자동 저장된 JSON이 롤백 삭제된다
+  9. 다중 선택된 Waypoint 에 대해 일괄 삭제가 가능하다
+  10. 최초 실행 시 "동영상 선택 → BBOX 생성 → Entry/Exit 설정" 가이드 UI가 표시된다
+  11. 지원하지 않는 파일 확장자 선택 시 오류 메시지가 전부 한국어로 출력된다
+  12. 시스템 주요 동작 로그(영상 로드/BBOX 생성·삭제/Waypoint/Export/예외 등)가 감사 이벤트로 기록되고 HMAC 기반 무결성 체인으로 변조를 검출할 수 있다
+**Plans**: TBD (플랜 작성 대기)
+
+Plans:
+- [ ] TBD — `/gsd:plan-phase 5.6` 로 분할 예정 (예상 5개: ID관리, BBOX/Waypoint/JSON, 크래시가드, 사용성, 보안로깅)
+
 ### Phase 6: 문서화
 **Goal**: 잠긴 바이너리와 완전히 일치하는 제품설명서 및 사용자취급설명서가 완성된다
 **Depends on**: Phase 5.5
@@ -134,7 +162,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 5.5 → 6
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 5.5 → 5.6 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -144,4 +172,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 5.5 → 6
 | 4. 성능 + 사용성 | 3/3 | Complete   | 2026-04-17 |
 | 5. 이식성 | 2/2 | Complete   | 2026-04-17 |
 | 5.5. 기능 보정 + 안정화 | 1/2 | In progress | - |
+| 5.6. 결함수정 (INSERTED) | 0/TBD | Not planned | - |
 | 6. 문서화 | 0/TBD | Not started | - |
