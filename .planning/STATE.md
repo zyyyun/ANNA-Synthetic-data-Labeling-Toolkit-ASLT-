@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05.6-01-crash-guard-PLAN.md
-last_updated: "2026-04-24T01:41:37.477Z"
+stopped_at: Completed 05.6-02-id-subsystem-PLAN.md
+last_updated: "2026-04-24T01:55:07.845Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 19
-  completed_plans: 14
+  completed_plans: 15
   percent: 80
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 05.6 (결함수정) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-04-24
 
@@ -65,6 +65,7 @@ Progress: [████████░░] 80%
 | Phase 05.5 P01 | 2min | 2 tasks | 1 files |
 | Quick 260421-mzz | 2min | 3 tasks | 2 files |
 | Phase 05.6-결함수정 P01 | 4min | 1 tasks | 1 files |
+| Phase 05.6-결함수정 P02 | 9min | 4 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,10 @@ Recent decisions affecting current work:
 - [Quick 260421-mzz]: build.bat name-based checks as sole correctness gate — file count removed as brittle SDK-layout dependency (CODEX-P2)
 - [Quick 260421-mzz]: build.bat wildcard installer resolution + 'if not defined' guard — version-agnostic, no silent 0 MB success (CODEX-P3)
 - [Phase 05.6-결함수정]: DF-1-13: btnEntry_Click/btnExit_Click/SetEntryMarker/SetExitMarkerAndCreateWaypoint 4지점 IsVideoLoaded 가드 — D-11 한국어 메시지 '영상을 먼저 로드해 주십시오.' (Information 아이콘) 고정
+- [Phase 05.6-결함수정]: NEW-05/07: ChangeBoxIdOnly 신구현 — Waypoint.ObjectId 자동 변경 없이 선택 박스만 ID 변경 (D-02 locked)
+- [Phase 05.6-결함수정]: NEW-03: Ctrl+N Exit→Entry ID 자동 매칭 신구현 (selectedBox 또는 foreach 경로)
+- [Phase 05.6-결함수정]: NEW-04: IsIdAssignmentKey 화이트리스트로 Ctrl+숫자/Ctrl+N/Alt+숫자 포커스 가드 예외 (Alt+숫자는 Rule 2 확장)
+- [Phase 05.6-결함수정]: NEW-01: ResolveIdForNewBox 5단계 ID 승계 (Waypoint→entryFrameIndex→selectedBox→currentAssignedId→기본1)
 
 ### Roadmap Evolution
 
@@ -115,6 +120,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-24T01:41:37.472Z
-Stopped at: Completed 05.6-01-crash-guard-PLAN.md
+Last session: 2026-04-24T01:54:58.501Z
+Stopped at: Completed 05.6-02-id-subsystem-PLAN.md
 Resume file: None
