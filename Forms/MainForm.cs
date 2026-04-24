@@ -1504,14 +1504,17 @@ namespace ASLTv1.Forms
                 drawStartPoint = e.Location;
                 var imagePoint = CoordinateHelper.ViewToImage(new PointF(e.X, e.Y), pictureBoxVideo);
 
+                // NEW-01 (D-06): ID 승계 적용 — Waypoint 범위면 Entry 박스 ID, 아니면 currentAssignedId / selectedBox 우선
+                int resolvedId = ResolveIdForNewBox(currentSelectedLabel, currentFrameIndex);
+
                 drawingBox = new BoundingBox
                 {
                     FrameIndex = currentFrameIndex,
                     Rectangle = new Rectangle((int)imagePoint.X, (int)imagePoint.Y, 0, 0),
                     Label = currentSelectedLabel,
-                    PersonId = currentSelectedLabel == "person" ? currentAssignedId : 0,
-                    VehicleId = currentSelectedLabel == "vehicle" ? currentAssignedId : 0,
-                    EventId = currentSelectedLabel == "event" ? currentAssignedId : 0,
+                    PersonId = currentSelectedLabel == "person" ? resolvedId : 0,
+                    VehicleId = currentSelectedLabel == "vehicle" ? resolvedId : 0,
+                    EventId = currentSelectedLabel == "event" ? resolvedId : 0,
                     Action = "waypoint"
                 };
             }
@@ -2601,6 +2604,48 @@ namespace ASLTv1.Forms
             if (keyCode == Keys.D9 || keyCode == Keys.NumPad9) return 9 + offset;
             if (keyCode == Keys.D0 || keyCode == Keys.NumPad0) return 10 + offset;
             return null;
+        }
+
+        /// <summary>
+        /// NEW-01 (D-06): 새 BBOX 생성 시 사용할 ID 결정.
+        /// 우선순위 (1) 현 프레임이 포함된 Waypoint 의 Entry 프레임에 같은 Label 박스가 있으면 그 ID,
+        /// (2) entryFrameIndex 필드가 있고 현 프레임이 Entry 이후면 Entry 동일 Label 박스 ID,
+        /// (3) 현 프레임의 같은 Label selectedBox ID,
+        /// (4) currentAssignedId (사용자 Ctrl+숫자 지정값),
+        /// (5) 기본값 1.
+        /// 목적: Exit 프레임에서 새 BBOX 를 그릴 때 Entry 프레임 ID 를 자동 승계 → Entry-Exit 일관성 유지.
+        /// </summary>
+        private int ResolveIdForNewBox(string label, int currentFrameIndex)
+        {
+            // (1) 현 프레임을 포함하는 Waypoint 의 Entry 박스 ID 승계
+            var containingWaypoint = waypointMarkers.FirstOrDefault(w =>
+                w.Label == label
+                && currentFrameIndex >= w.EntryFrame
+                && currentFrameIndex <= w.ExitFrame);
+            if (containingWaypoint != null)
+            {
+                var entryBox = GetBboxesForFrame(containingWaypoint.EntryFrame)
+                    .FirstOrDefault(b => b.Label == label && !b.IsDeleted);
+                if (entryBox != null) return GetBoxId(entryBox);
+            }
+
+            // (2) entryFrameIndex 가 지정되어 있고 현 프레임이 Entry 이후면 Entry 동일 Label ID 승계
+            if (entryFrameIndex.HasValue && currentFrameIndex >= entryFrameIndex.Value)
+            {
+                var entryBox = GetBboxesForFrame(entryFrameIndex.Value)
+                    .FirstOrDefault(b => b.Label == label && !b.IsDeleted);
+                if (entryBox != null) return GetBoxId(entryBox);
+            }
+
+            // (3) 현 프레임의 같은 Label selectedBox ID 승계
+            if (selectedBox != null && selectedBox.Label == label && selectedBox.FrameIndex == currentFrameIndex)
+                return GetBoxId(selectedBox);
+
+            // (4) 사용자 Ctrl+숫자 지정값
+            if (currentAssignedId >= 1) return currentAssignedId;
+
+            // (5) 기본값
+            return 1;
         }
 
         /// <summary>
