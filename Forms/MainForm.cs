@@ -1418,35 +1418,52 @@ namespace ASLTv1.Forms
 
         private void btnDeleteSelectedWaypoint_Click(object sender, EventArgs e)
         {
-            WaypointMarker waypoint = null;
-            string waypointType = "";
+            // DF-1-18 (D-16): 다중 선택 일괄 삭제 — P/V/E 각 ListView 의 SelectedItems 전체 순회
+            var toDelete = new List<(WaypointMarker wp, string type)>();
 
-            if (listViewPersonWaypoints.SelectedItems.Count > 0) { waypoint = listViewPersonWaypoints.SelectedItems[0].Tag as WaypointMarker; waypointType = "Person"; }
-            else if (listViewVehicleWaypoints.SelectedItems.Count > 0) { waypoint = listViewVehicleWaypoints.SelectedItems[0].Tag as WaypointMarker; waypointType = "Vehicle"; }
-            else if (listViewEventWaypoints.SelectedItems.Count > 0) { waypoint = listViewEventWaypoints.SelectedItems[0].Tag as WaypointMarker; waypointType = "Event"; }
-            else { MessageBox.Show("삭제할 Waypoint를 선택해주세요.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            foreach (ListViewItem item in listViewPersonWaypoints.SelectedItems)
+                if (item.Tag is WaypointMarker wp) toDelete.Add((wp, "Person"));
+            foreach (ListViewItem item in listViewVehicleWaypoints.SelectedItems)
+                if (item.Tag is WaypointMarker wp) toDelete.Add((wp, "Vehicle"));
+            foreach (ListViewItem item in listViewEventWaypoints.SelectedItems)
+                if (item.Tag is WaypointMarker wp) toDelete.Add((wp, "Event"));
 
-            if (waypoint == null) return;
-
-            var result = MessageBox.Show($"선택한 {waypointType} Waypoint를 삭제하시겠습니까?", $"{waypointType} Waypoint 삭제", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-            if (result != DialogResult.Yes) return;
-
-            var boxesToDelete = boundingBoxes.Where(b =>
-                b.Label == waypoint.Label &&
-                GetBoxId(b) == waypoint.ObjectId &&
-                b.FrameIndex >= waypoint.EntryFrame &&
-                b.FrameIndex <= waypoint.ExitFrame).ToList();
-
-            foreach (var box in boxesToDelete)
+            if (toDelete.Count == 0)
             {
-                AddUndoAction(new UndoAction { Type = UndoActionType.RemoveBox, Box = CloneBoundingBox(box) });
-                boundingBoxes.Remove(box);
+                MessageBox.Show("삭제할 Waypoint를 선택해주세요.", "알림",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
             }
 
-            if (selectedBox != null && boxesToDelete.Contains(selectedBox)) selectedBox = null;
-            if (selectedWaypoint == waypoint) selectedWaypoint = null;
+            string prompt = toDelete.Count == 1
+                ? $"선택한 {toDelete[0].type} Waypoint를 삭제하시겠습니까?"
+                : $"선택된 {toDelete.Count}개의 Waypoint를 삭제하시겠습니까?";
+            string title = toDelete.Count == 1
+                ? $"{toDelete[0].type} Waypoint 삭제"
+                : "Waypoint 삭제";
 
-            waypointMarkers.Remove(waypoint);
+            var result = MessageBox.Show(prompt, title, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            if (result != DialogResult.Yes) return;
+
+            foreach (var (waypoint, type) in toDelete)
+            {
+                var boxesToDelete = boundingBoxes.Where(b =>
+                    b.Label == waypoint.Label &&
+                    GetBoxId(b) == waypoint.ObjectId &&
+                    b.FrameIndex >= waypoint.EntryFrame &&
+                    b.FrameIndex <= waypoint.ExitFrame).ToList();
+
+                foreach (var box in boxesToDelete)
+                {
+                    AddUndoAction(new UndoAction { Type = UndoActionType.RemoveBox, Box = CloneBoundingBox(box) });
+                    boundingBoxes.Remove(box);
+                }
+
+                if (selectedBox != null && boxesToDelete.Contains(selectedBox)) selectedBox = null;
+                if (selectedWaypoint == waypoint) selectedWaypoint = null;
+                waypointMarkers.Remove(waypoint);
+            }
+
             UpdateWaypointListView();
             InvalidateBoxCache();
             UpdateBoxCount();
