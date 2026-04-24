@@ -2403,7 +2403,22 @@ namespace ASLTv1.Forms
             var action = undoStack.Pop();
             switch (action.Type)
             {
-                case UndoActionType.AddBox: boundingBoxes.Remove(action.Box); InvalidateBoxCache(); if (selectedBox == action.Box) selectedBox = null; break;
+                case UndoActionType.AddBox:
+                    // DF-1-07 (05.6-04 Task 5-C): 값 기반 매칭 — action.Box 가 clone round-trip 된 경우 참조 불일치로 Remove 실패하던 버그 수정.
+                    // 동일 (FrameIndex, Label, Id) 를 가진 live 박스를 찾아 제거. ModifyBox 가 Rectangle 을 in-place 변경하므로 Rectangle 은 매칭 키에서 제외.
+                    {
+                        var toRemove = boundingBoxes.FirstOrDefault(b =>
+                            b.FrameIndex == action.Box.FrameIndex &&
+                            b.Label == action.Box.Label &&
+                            GetBoxId(b) == GetBoxId(action.Box));
+                        if (toRemove != null)
+                        {
+                            boundingBoxes.Remove(toRemove);
+                            if (selectedBox == toRemove) selectedBox = null;
+                        }
+                        InvalidateBoxCache();
+                    }
+                    break;
                 case UndoActionType.RemoveBox: boundingBoxes.Add(action.Box); InvalidateBoxCache(); break;
                 case UndoActionType.ModifyBox:
                     var boxToModify = boundingBoxes.FirstOrDefault(b => b.FrameIndex == action.Box.FrameIndex && GetBoxId(b) == GetBoxId(action.Box) && b.Label == action.Box.Label);
@@ -2421,7 +2436,21 @@ namespace ASLTv1.Forms
             switch (action.Type)
             {
                 case UndoActionType.AddBox: boundingBoxes.Add(action.Box); InvalidateBoxCache(); break;
-                case UndoActionType.RemoveBox: boundingBoxes.Remove(action.Box); InvalidateBoxCache(); if (selectedBox == action.Box) selectedBox = null; break;
+                case UndoActionType.RemoveBox:
+                    // DF-1-07 (05.6-04 Task 5-C): 값 기반 매칭 — Undo AddBox 가 값 기반으로 수정됨에 따라 대칭성 유지를 위해 Redo RemoveBox 도 동일 패턴 적용.
+                    {
+                        var toRemove = boundingBoxes.FirstOrDefault(b =>
+                            b.FrameIndex == action.Box.FrameIndex &&
+                            b.Label == action.Box.Label &&
+                            GetBoxId(b) == GetBoxId(action.Box));
+                        if (toRemove != null)
+                        {
+                            boundingBoxes.Remove(toRemove);
+                            if (selectedBox == toRemove) selectedBox = null;
+                        }
+                        InvalidateBoxCache();
+                    }
+                    break;
                 case UndoActionType.ModifyBox:
                     var boxToModify = boundingBoxes.FirstOrDefault(b => b.FrameIndex == action.Box.FrameIndex && GetBoxId(b) == action.OriginalObjectId && b.Label == action.OriginalLabel);
                     if (boxToModify != null) { boxToModify.Rectangle = action.Box.Rectangle; boxToModify.Label = action.Box.Label; SetBoxId(boxToModify, action.Box.Label, GetBoxId(action.Box)); InvalidateBoxCache(); }
