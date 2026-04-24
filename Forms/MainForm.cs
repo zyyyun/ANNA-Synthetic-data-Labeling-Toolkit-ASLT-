@@ -1168,6 +1168,8 @@ namespace ASLTv1.Forms
                     EntryTime = entryTime.ToString(@"hh\:mm\:ss"), ExitTime = exitTime.ToString(@"hh\:mm\:ss"),
                     ObjectId = personId, Label = "person"
                 });
+                // DF-1-17 (D-17a): Waypoint 생성 감사 이벤트
+                LogService.AuditWaypointCreate("person", personId, entryFrameIndex.Value, exitFrameIndex.Value);
             }
 
             // Create Vehicle waypoints
@@ -1189,6 +1191,8 @@ namespace ASLTv1.Forms
                     EntryTime = entryTime.ToString(@"hh\:mm\:ss"), ExitTime = exitTime.ToString(@"hh\:mm\:ss"),
                     ObjectId = vehicleId, Label = "vehicle"
                 });
+                // DF-1-17 (D-17a): Waypoint 생성 감사 이벤트
+                LogService.AuditWaypointCreate("vehicle", vehicleId, entryFrameIndex.Value, exitFrameIndex.Value);
             }
 
             // Create Event waypoints
@@ -1216,6 +1220,8 @@ namespace ASLTv1.Forms
                         ExitTime = exitTime.ToString(@"hh\:mm\:ss"),
                         ObjectId = eventId, Label = "event", InteractingObject = ""
                     });
+                    // DF-1-17 (D-17a): Waypoint 생성 감사 이벤트
+                    LogService.AuditWaypointCreate("event", eventId, minFrameIndex, exitFrameIndex.Value);
                     PropagateEventBoxWithinRange(entryEventBox, exitFrameIndex.Value);
                 }
             }
@@ -1489,6 +1495,8 @@ namespace ASLTv1.Forms
                 if (selectedBox != null && boxesToDelete.Contains(selectedBox)) selectedBox = null;
                 if (selectedWaypoint == waypoint) selectedWaypoint = null;
                 waypointMarkers.Remove(waypoint);
+                // DF-1-17 (D-17a): Waypoint 삭제 감사 이벤트 (사용자 주도 — 일괄 삭제 경로)
+                LogService.AuditWaypointDelete(waypoint.Label, waypoint.ObjectId, waypoint.EntryFrame, waypoint.ExitFrame);
             }
 
             UpdateWaypointListView();
@@ -1821,6 +1829,9 @@ namespace ASLTv1.Forms
                     boundingBoxes.Add(drawingBox);
                     InvalidateBoxCache();
                     AddUndoAction(new UndoAction { Type = UndoActionType.AddBox, Box = drawingBox });
+                    // DF-1-17 (D-17a): 사용자 주도 BBOX 생성 감사 이벤트 (MouseUp 경로 — 주 진입점)
+                    // 프로그래밍적 전파/추적 연장(line 502, 2480, 2504, 2537) 및 Undo/Redo 경로는 제외 — 신호 품질 유지
+                    LogService.AuditBBoxCreate(drawingBox.Label, GetBoxId(drawingBox), drawingBox.FrameIndex);
                     selectedBox = drawingBox;
                     UpdateObjectInfo(selectedBox);
                     UpdateBoxCount();
@@ -2776,6 +2787,8 @@ namespace ASLTv1.Forms
                 var deletedSnapshot = CloneBoundingBox(selectedBox);  // DF-1-03: Waypoint 매칭용 스냅샷
                 AddUndoAction(new UndoAction { Type = UndoActionType.RemoveBox, Box = deletedSnapshot });
                 boundingBoxes.Remove(selectedBox);
+                // DF-1-17 (D-17a): 사용자 주도 BBOX 삭제 감사 이벤트
+                LogService.AuditBBoxDelete(deletedSnapshot.Label, GetBoxId(deletedSnapshot), deletedSnapshot.FrameIndex);
                 selectedBox = null;
                 InvalidateBoxCache(); UpdateBoxCount(); UpdateBboxListDisplay(); pictureBoxVideo.Invalidate();
                 // DF-1-03 (D-07): Waypoint 구간 내 마지막 박스였는지 확인 후 동반 삭제 프롬프트
@@ -2999,6 +3012,8 @@ namespace ASLTv1.Forms
             var deletedSnapshot = CloneBoundingBox(selectedBox);  // DF-1-03: Waypoint 매칭용 스냅샷
             AddUndoAction(new UndoAction { Type = UndoActionType.RemoveBox, Box = deletedSnapshot });
             boundingBoxes.Remove(selectedBox);
+            // DF-1-17 (D-17a): 사용자 주도 BBOX 삭제 감사 이벤트 (사이드바 경로)
+            LogService.AuditBBoxDelete(deletedSnapshot.Label, GetBoxId(deletedSnapshot), deletedSnapshot.FrameIndex);
             selectedBox = null;
             InvalidateBoxCache(); UpdateBoxCount(); UpdateBboxListDisplay(); pictureBoxVideo.Invalidate();
             // DF-1-03 (D-07): 사이드바 삭제도 Delete 키와 동일한 Waypoint 동반 삭제 프롬프트
@@ -3050,6 +3065,8 @@ namespace ASLTv1.Forms
             {
                 waypointMarkers.Remove(waypoint);
                 if (selectedWaypoint == waypoint) selectedWaypoint = null;
+                // DF-1-17 (D-17a): Waypoint 삭제 감사 이벤트 (BBOX 동반 삭제 프롬프트 Yes 경로)
+                LogService.AuditWaypointDelete(waypoint.Label, waypoint.ObjectId, waypoint.EntryFrame, waypoint.ExitFrame);
                 UpdateWaypointListView();
                 panelTimeline.Invalidate();
             }

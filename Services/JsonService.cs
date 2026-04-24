@@ -411,6 +411,9 @@ namespace ASLTv1.Services
                 }
 
                 result.Success = true;
+
+                // DF-1-17 (D-17a): JSON 로드 성공 감사 이벤트
+                LogService.AuditJsonLoad(loadPath);
             }
             catch (OutOfMemoryException oomEx)
             {
@@ -619,6 +622,9 @@ namespace ASLTv1.Services
                 };
                 string json = JsonConvert.SerializeObject(labelingData, settings);
                 File.WriteAllText(filePath, json);
+
+                // DF-1-17 (D-17a): 내보내기 성공 감사 이벤트
+                LogService.AuditExport(filePath, images.Count, annotations.Count);
             }
             catch (IOException ioEx)
             {
@@ -666,7 +672,8 @@ namespace ASLTv1.Services
             try
             {
                 File.Delete(jsonPath);
-                Log.Information("[AUDIT] JSON 파일 삭제: {Path}", jsonPath);
+                // DF-1-17 (D-17a): Wave 3 의 raw Log.Information 을 LogService.AuditJsonDelete 래퍼로 교체
+                LogService.AuditJsonDelete(jsonPath);
                 return true;
             }
             catch (Exception ex)
@@ -698,7 +705,8 @@ namespace ASLTv1.Services
                 try
                 {
                     File.Delete(currentJsonFile);
-                    Log.Information("[AUDIT] JSON 파일 삭제: {Path}", currentJsonFile);
+                    // DF-1-17 (D-17a): Wave 3 의 raw Log.Information 을 LogService.AuditJsonDelete 래퍼로 교체
+                    LogService.AuditJsonDelete(currentJsonFile);
                     return true;
                 }
                 catch (Exception ex)

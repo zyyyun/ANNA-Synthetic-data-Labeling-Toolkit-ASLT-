@@ -150,6 +150,9 @@ namespace ASLTv1.Services
 
             LoadFrame(0);
 
+            // DF-1-17 (D-17a): 영상 로드 감사 이벤트 — 성공 경로에서만
+            LogService.AuditVideoLoad(filePath);
+
             VideoLoaded?.Invoke(this, filePath);
 
             // Attempt to load SRT subtitle
