@@ -2384,7 +2384,7 @@ namespace ASLTv1.Forms
                 {
                     if (selectedBox != null && selectedBox.Label == "person")
                     {
-                        ChangeBoxIdWithinWaypoint(selectedBox, assignedId.Value);
+                        ChangeBoxIdOnly(selectedBox, assignedId.Value);
                     }
                     else currentAssignedId = assignedId.Value;
                     e.Handled = true; return;
@@ -2397,7 +2397,7 @@ namespace ASLTv1.Forms
                 int? assignedId = GetIdFromKey(e.KeyCode, 10);
                 if (assignedId.HasValue)
                 {
-                    if (selectedBox != null && selectedBox.Label == "person") ChangeBoxIdWithinWaypoint(selectedBox, assignedId.Value);
+                    if (selectedBox != null && selectedBox.Label == "person") ChangeBoxIdOnly(selectedBox, assignedId.Value);
                     else currentAssignedId = assignedId.Value;
                     e.Handled = true; return;
                 }
@@ -2409,7 +2409,7 @@ namespace ASLTv1.Forms
                 int? classId = GetIdFromKey(e.KeyCode, 0);
                 if (classId.HasValue && classId.Value >= 1 && classId.Value <= 4)
                 {
-                    ChangeBoxIdWithinWaypoint(selectedBox, classId.Value);
+                    ChangeBoxIdOnly(selectedBox, classId.Value);
                     e.Handled = true; return;
                 }
             }
@@ -2429,7 +2429,7 @@ namespace ASLTv1.Forms
                 int? classId = GetIdFromKey(e.KeyCode, 0);
                 if (classId.HasValue && classId.Value >= 1 && classId.Value <= 10)
                 {
-                    ChangeBoxIdWithinWaypoint(selectedBox, classId.Value);
+                    ChangeBoxIdOnly(selectedBox, classId.Value);
                     e.Handled = true; return;
                 }
             }
@@ -2521,22 +2521,39 @@ namespace ASLTv1.Forms
             return null;
         }
 
-        private void ChangeBoxIdWithinWaypoint(BoundingBox box, int newId)
+        /// <summary>
+        /// D-02 (NEW-05/07): 선택된 개별 BBOX 하나만 ID 를 변경한다.
+        /// 같은 Waypoint 내 같은 Label+oldId 의 다른 박스로 전파되지 않으며 Waypoint.ObjectId 도 자동 변경되지 않는다
+        /// (Waypoint 단위 일괄 변경은 사용자가 Waypoint 전체를 삭제 후 재생성해야 한다 — 의도적 보수성).
+        /// Undo 스택에 등록되어 Ctrl+Z 로 복원 가능.
+        /// </summary>
+        private void ChangeBoxIdOnly(BoundingBox box, int newId)
         {
+            if (box == null) return;
             int oldId = GetBoxId(box);
-            var waypoint = FindWaypointForBox(box);
-            if (waypoint != null)
+            if (oldId == newId) return;
+
+            // 변경 전 상태 스냅샷 (Undo 복원용)
+            var origRect = box.Rectangle;
+            var origLabel = box.Label;
+
+            SetBoxId(box, box.Label, newId);
+
+            // Undo 등록 — action.Box 는 변경 후 상태여야 Undo 핸들러가 GetBoxId(action.Box) == newId 로 boxToModify 조회 성공함
+            // Original* 필드는 복원 대상 값을 담는다 (MainForm.cs:2241-2243 Undo 핸들러 계약)
+            AddUndoAction(new UndoAction
             {
-                var boxesToUpdate = boundingBoxes.Where(b => b.Label == box.Label && GetBoxId(b) == oldId && b.FrameIndex >= waypoint.EntryFrame && b.FrameIndex <= waypoint.ExitFrame && !b.IsDeleted && FindWaypointForBox(b) == waypoint).ToList();
-                foreach (var b in boxesToUpdate) SetBoxId(b, box.Label, newId);
-                waypoint.ObjectId = newId;
-                UpdateWaypointListView();
-            }
-            else
-            {
-                SetBoxId(box, box.Label, newId);
-            }
-            UpdateObjectInfo(box); UpdateBboxListDisplay(); pictureBoxVideo.Invalidate();
+                Type = UndoActionType.ModifyBox,
+                Box = CloneBoundingBox(box),
+                OriginalRectangle = origRect,
+                OriginalLabel = origLabel,
+                OriginalObjectId = oldId,
+            });
+
+            // NEW-05 수정: Waypoint.ObjectId 는 자동 변경하지 않음 (선택된 박스만 변경)
+            UpdateObjectInfo(box);
+            UpdateBboxListDisplay();
+            pictureBoxVideo.Invalidate();
         }
 
         #endregion
@@ -2835,7 +2852,7 @@ namespace ASLTv1.Forms
                         if (newClassId != GetBoxId(capturedBox))
                         {
                             selectedBox = capturedBox;
-                            ChangeBoxIdWithinWaypoint(capturedBox, newClassId);
+                            ChangeBoxIdOnly(capturedBox, newClassId);
                         }
                     };
                     itemPanel.Controls.Add(combo);
