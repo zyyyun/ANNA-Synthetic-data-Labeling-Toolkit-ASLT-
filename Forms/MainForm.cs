@@ -1854,13 +1854,11 @@ namespace ASLTv1.Forms
                     PushModifyBoxUndo(selectedBox, originalResizeRect, selectedBox.Label, GetBoxId(selectedBox));
                 }
                 InvalidateBoxCache();
-                if (selectedBox != null)
-                {
-                    if (selectedBox.Label == "event")
-                        PropagateEventBoxFromCurrentFrame(selectedBox);
-                    else if (selectedBox.Label == "person" || selectedBox.Label == "vehicle")
-                        PropagatePersonVehicleBoxFromCurrentFrame(selectedBox);
-                }
+                // NEW-08 fix (2026-04-24): Waypoint cross-frame Rectangle 전파 제거.
+                // 기존 Propagate*FromCurrentFrame 호출은 resize 시 현재 프레임 이후의 모든 박스
+                // Rectangle을 덮어써서 사용자가 "뒤 프레임 좌표가 수정 프레임으로 고정됨"으로 관찰.
+                // 사용자 결정: "기존 waypoint에 저장된 bbox 좌표값들을 그대로 유지해야지."
+                // 드래그/리사이즈는 현재 프레임의 선택 박스만 수정, 다른 프레임은 불변.
                 pictureBoxVideo.Cursor = Cursors.Default;
                 pictureBoxVideo.Invalidate();
             }
@@ -1879,10 +1877,8 @@ namespace ASLTv1.Forms
                             PushModifyBoxUndo(selectedBox, originalDragRect, selectedBox.Label, GetBoxId(selectedBox));
                         }
 
-                        if (selectedBox.Label == "event")
-                            PropagateEventBoxFromCurrentFrame(selectedBox);
-                        else if (selectedBox.Label == "person" || selectedBox.Label == "vehicle")
-                            PropagatePersonVehicleBoxFromCurrentFrame(selectedBox);
+                        // NEW-08 fix (2026-04-24): 드래그로 변경된 Rectangle을 이후 프레임들에
+                        // 전파하던 Propagate*FromCurrentFrame 호출 제거. 각 프레임의 박스는 독립 관리.
                     }
                 }
                 doubleClickTimer?.Dispose();
