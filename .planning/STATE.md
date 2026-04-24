@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05.6-02-id-subsystem-PLAN.md
-last_updated: "2026-04-24T01:55:07.845Z"
+stopped_at: Completed 05.6-03-bbox-waypoint-json-PLAN.md
+last_updated: "2026-04-24T02:06:23.894Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 19
-  completed_plans: 15
+  completed_plans: 16
   percent: 80
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 05.6 (결함수정) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-04-24
 
@@ -66,6 +66,7 @@ Progress: [████████░░] 80%
 | Quick 260421-mzz | 2min | 3 tasks | 2 files |
 | Phase 05.6-결함수정 P01 | 4min | 1 tasks | 1 files |
 | Phase 05.6-결함수정 P02 | 9min | 4 tasks | 1 files |
+| Phase 05.6-결함수정 P03 | 4min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,10 @@ Recent decisions affecting current work:
 - [Phase 05.6-결함수정]: NEW-03: Ctrl+N Exit→Entry ID 자동 매칭 신구현 (selectedBox 또는 foreach 경로)
 - [Phase 05.6-결함수정]: NEW-04: IsIdAssignmentKey 화이트리스트로 Ctrl+숫자/Ctrl+N/Alt+숫자 포커스 가드 예외 (Alt+숫자는 Rule 2 확장)
 - [Phase 05.6-결함수정]: NEW-01: ResolveIdForNewBox 5단계 ID 승계 (Waypoint→entryFrameIndex→selectedBox→currentAssignedId→기본1)
+- [Phase 05.6-결함수정]: DF-1-03: PromptWaypointDeletionIfEmpty 헬퍼 — Delete/G 키 + 사이드바 삭제 버튼 사용자 주도 경로에서만 D-07 canonical 프롬프트 호출 (Undo/Waypoint 삭제/exit-shrink 제외)
+- [Phase 05.6-결함수정]: DF-1-05: _autoSavedJsonPath 단일 choke-point — SaveCurrentLabelingData 내부 한 곳에서만 세팅, 영상 전환/앱 종료 DialogResult.No 분기 롤백 삭제 (OnFormClosing 확장 Rule 2)
+- [Phase 05.6-결함수정]: DF-1-04: btnExportJson_Click Empty-state 이중 프롬프트 — 기존 JSON 존재 시 D-08 YesNo 삭제 / 부재 시 Information 알림
+- [Phase 05.6-결함수정]: JsonService.DeleteJsonForVideo 신규 + PathValidator 방어선 + [AUDIT] JSON 파일 삭제 감사 로그 — Wave 5 AuditJsonDelete 훅 앵커, Legacy DeleteJsonFileForVideo 는 위임 (Rule 1 중복 제거)
 
 ### Roadmap Evolution
 
@@ -120,6 +125,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-24T01:54:58.501Z
-Stopped at: Completed 05.6-02-id-subsystem-PLAN.md
+Last session: 2026-04-24T02:06:23.888Z
+Stopped at: Completed 05.6-03-bbox-waypoint-json-PLAN.md
 Resume file: None
