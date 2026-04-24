@@ -137,8 +137,8 @@ Plans:
   3. 선택된 개별 BBOX의 ID만 변경되고, 같은 클래스·같은 ID의 다른 박스는 영향받지 않는다
   4. Ctrl+N 입력 시 Exit 프레임 BBOX의 ID가 Entry 프레임 BBOX의 ID와 자동 일치된다
   5. Entry-Exit ID 불일치 시 Person/Vehicle/Event 모두 경고 메시지가 표시된다
-  6. Waypoint 구간 내 BBOX를 전부 삭제할 때 Waypoint 동반 삭제 여부를 묻는 프롬프트가 표시되고 선택 결과가 즉시 반영된다
-  7. Waypoint/BBOX 없는 상태로 JSON 저장 시도 시 "해당 JSON 파일은 삭제됩니다 — 삭제하시겠습니까?" 프롬프트가 제공되고 선택이 파일 상태에 반영된다
+  6. Waypoint 구간 내 마지막 BBOX 삭제 시 "Waypoint 구간 BBOX가 전부 삭제됩니다. 해당 Waypoint도 함께 삭제하시겠습니까?" 프롬프트(Yes/No)가 표시되고 선택 결과가 즉시 반영된다
+  7. Waypoint/BBOX 없는 상태로 JSON 저장 시도 시 "Waypoint가 없어 해당 JSON 파일은 삭제됩니다. 삭제하시겠습니까?" 프롬프트(Yes/No)가 제공되고 선택이 파일 상태에 반영된다
   8. 영상 전환 시 "저장하지 않은 편집이 있습니다…" 프롬프트에서 "아니요" 선택 시 자동 저장된 JSON이 롤백 삭제된다
   9. 다중 선택된 Waypoint 에 대해 일괄 삭제가 가능하다
   10. 최초 실행 시 "동영상 선택 → BBOX 생성 → Entry/Exit 설정" 가이드 UI가 표시된다
