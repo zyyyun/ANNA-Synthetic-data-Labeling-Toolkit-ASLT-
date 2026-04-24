@@ -2486,6 +2486,21 @@ namespace ASLTv1.Forms
                 if (keyData == Keys.Left) { LoadFrame(Math.Max(0, _videoService.CurrentFrameIndex - (int)(_videoService.Fps * 5))); return true; }
                 if (keyData == Keys.Right) { LoadFrame(Math.Min(_videoService.TotalFrames - 1, _videoService.CurrentFrameIndex + (int)(_videoService.Fps * 5))); return true; }
             }
+
+            // DF-1-06 (D-12): Tab / Shift+Tab 를 WinForms 기본 버튼 네비게이션보다 먼저 가로챈다.
+            //   - MainForm_KeyDown 의 Tab 분기는 ProcessDialogKey 가 Tab 을 먼저 소비해 도달 불가였다.
+            //   - ProcessCmdKey 는 PreProcessMessage → ProcessDialogKey 이전에 호출되므로 여기서 true 를 반환하면
+            //     포커스가 버튼/컨트롤 간 이동하는 기본 동작이 차단된다.
+            //   - 영상 미로드 또는 BBOX 0 건 상황에서도 항상 true 를 반환하여 버튼 focus 이동을 막는다.
+            if (keyData == Keys.Tab || keyData == (Keys.Shift | Keys.Tab))
+            {
+                if (isVideoLoaded && boundingBoxes.Count > 0)
+                {
+                    CycleSelection(reverse: (keyData & Keys.Shift) == Keys.Shift);
+                }
+                return true;  // 항상 true — WinForms 버튼 traversal 방지
+            }
+
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
@@ -2648,7 +2663,9 @@ namespace ASLTv1.Forms
 
             if (!_videoService.IsVideoLoaded) return;  // DF-1-13: 아래 Keys.E/X 등 영상 의존 브랜치 보호
 
-            if (e.KeyCode == Keys.Tab) { CycleSelection(e.Shift); e.Handled = true; return; }
+            // DF-1-06 (D-12): Tab 처리는 ProcessCmdKey 에서 ProcessDialogKey 전에 가로채므로 여기서는 dead code.
+            //   WinForms 기본 버튼 네비게이션이 Tab 을 먼저 먹기 때문에 KeyDown 까지 도달하지 않는다.
+            //   (구 구현: `if (e.KeyCode == Keys.Tab) { CycleSelection(e.Shift); e.Handled = true; return; }`)
             if (e.KeyCode == Keys.Space) { btnPlay_Click(sender, e); e.Handled = true; }
             else if (e.KeyCode == Keys.C && !e.Control) { btnToggleSubtitle_Click(sender, e); e.Handled = true; }
             else if (e.Shift && e.KeyCode == Keys.OemPeriod)
