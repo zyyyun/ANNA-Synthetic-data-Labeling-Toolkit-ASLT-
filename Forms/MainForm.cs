@@ -1011,6 +1011,9 @@ namespace ASLTv1.Forms
             // FUNC-06: Entry-Exit 프레임 간 객체 ID 불일치 감지 및 경고
             var exitPersonBoxes = GetBboxesForFrame(currentFrameIndex).Where(b => b.Label == "person" && !b.IsDeleted).ToList();
             var exitVehicleBoxes = GetBboxesForFrame(currentFrameIndex).Where(b => b.Label == "vehicle" && !b.IsDeleted).ToList();
+            // NEW-02 (D-03): Event 클래스도 Person/Vehicle 과 동일하게 Entry-Exit ID 불일치 검증
+            var exitEventBoxes = GetBboxesForFrame(currentFrameIndex).Where(b => b.Label == "event" && !b.IsDeleted).ToList();
+            var entryEventBoxes = GetBboxesForFrame(entryFrameIndex.Value).Where(b => b.Label == "event" && !b.IsDeleted).ToList();
             var mismatchMessages = new List<string>();
             foreach (var entryBox in entryPersonBoxes)
             {
@@ -1021,6 +1024,11 @@ namespace ASLTv1.Forms
             {
                 if (exitVehicleBoxes.Count > 0 && !exitVehicleBoxes.Any(b => b.VehicleId == entryBox.VehicleId))
                     mismatchMessages.Add($"Vehicle ID {entryBox.VehicleId:D2}: Entry 프레임({entryFrameIndex.Value})과 Exit 프레임({currentFrameIndex}) 간 ID가 일치하지 않습니다.");
+            }
+            foreach (var entryBox in entryEventBoxes)
+            {
+                if (exitEventBoxes.Count > 0 && !exitEventBoxes.Any(b => b.EventId == entryBox.EventId))
+                    mismatchMessages.Add($"Event ID {entryBox.EventId:D2}: Entry 프레임({entryFrameIndex.Value})과 Exit 프레임({currentFrameIndex}) 간 ID가 일치하지 않습니다.");
             }
             if (mismatchMessages.Count > 0)
             {
@@ -2360,12 +2368,24 @@ namespace ASLTv1.Forms
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
+        /// <summary>NEW-04: ID 지정용 숫자 키(Ctrl+D0~D9, Ctrl+NumPad0~9)인지 판정</summary>
+        private static bool IsIdAssignmentKey(Keys keyCode)
+        {
+            return (keyCode >= Keys.D0 && keyCode <= Keys.D9)
+                || (keyCode >= Keys.NumPad0 && keyCode <= Keys.NumPad9);
+        }
+
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
             Control focusedControl = this.ActiveControl;
             if (focusedControl is TextBox || focusedControl is ComboBox)
             {
-                if (e.KeyCode != Keys.Enter && e.KeyCode != Keys.Escape) return;
+                // NEW-04: Ctrl+숫자(D0~D9, NumPad0~9) / Ctrl+N / Alt+숫자 는 ID 지정 단축키이므로
+                // TextBox/ComboBox 포커스와 무관하게 통과시킨다 (QA [4] 결함).
+                bool isIdShortcut =
+                    (e.Control && (IsIdAssignmentKey(e.KeyCode) || e.KeyCode == Keys.N))
+                    || (e.Alt && IsIdAssignmentKey(e.KeyCode));
+                if (!isIdShortcut && e.KeyCode != Keys.Enter && e.KeyCode != Keys.Escape) return;
             }
 
             // F1/F2/F3: label selection
@@ -2441,6 +2461,68 @@ namespace ASLTv1.Forms
                     currentAssignedId = classId.Value;
                     e.Handled = true; return;
                 }
+            }
+
+            // NEW-03 (D-01): Ctrl+N — Exit 프레임 BBOX ID 를 Entry 프레임과 자동 매칭
+            // MainForm.cs (기존) 의 오류 메시지에서 "Ctrl+N 또는 단축키로…" 문구로 안내되던 기능의 실구현.
+            if (e.Control && !e.Shift && !e.Alt && e.KeyCode == Keys.N)
+            {
+                if (!_videoService.IsVideoLoaded) { e.Handled = true; return; }
+
+                int currentFrame = _videoService.CurrentFrameIndex;
+
+                // Entry 프레임 결정: (1) entryFrameIndex 필드 > (2) 현 프레임 포함 Waypoint 의 EntryFrame
+                int? entryFrame = null;
+                if (entryFrameIndex.HasValue) entryFrame = entryFrameIndex.Value;
+                else
+                {
+                    var containing = waypointMarkers.FirstOrDefault(w =>
+                        currentFrame >= w.EntryFrame && currentFrame <= w.ExitFrame);
+                    if (containing != null) entryFrame = containing.EntryFrame;
+                }
+
+                if (!entryFrame.HasValue)
+                {
+                    MessageBox.Show(
+                        "Entry 프레임이 지정되지 않아 Ctrl+N 을 수행할 수 없습니다.",
+                        "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    e.Handled = true; return;
+                }
+
+                var entryBoxes = GetBboxesForFrame(entryFrame.Value).Where(b => !b.IsDeleted).ToList();
+                var exitBoxes = GetBboxesForFrame(currentFrame).Where(b => !b.IsDeleted).ToList();
+
+                int matched = 0;
+                if (selectedBox != null && exitBoxes.Contains(selectedBox))
+                {
+                    // 선택된 박스만 매칭 — 같은 Label 첫 번째 Entry 박스 ID 사용
+                    var entryMatch = entryBoxes.FirstOrDefault(b => b.Label == selectedBox.Label);
+                    if (entryMatch != null && GetBoxId(entryMatch) != GetBoxId(selectedBox))
+                    {
+                        ChangeBoxIdOnly(selectedBox, GetBoxId(entryMatch));
+                        matched++;
+                    }
+                }
+                else
+                {
+                    // 현재 프레임의 모든 Exit 박스를 Label 기준 1:1 매칭 (Entry 동일 Label 첫 박스)
+                    foreach (var exitBox in exitBoxes)
+                    {
+                        var entryMatch = entryBoxes.FirstOrDefault(b => b.Label == exitBox.Label);
+                        if (entryMatch != null && GetBoxId(entryMatch) != GetBoxId(exitBox))
+                        {
+                            ChangeBoxIdOnly(exitBox, GetBoxId(entryMatch));
+                            matched++;
+                        }
+                    }
+                }
+
+                if (matched == 0)
+                    MessageBox.Show("일치시킬 ID 차이가 없습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                else
+                    pictureBoxVideo.Invalidate();
+
+                e.Handled = true; return;
             }
 
             if (!_videoService.IsVideoLoaded) return;  // DF-1-13: 아래 Keys.E/X 등 영상 의존 브랜치 보호
