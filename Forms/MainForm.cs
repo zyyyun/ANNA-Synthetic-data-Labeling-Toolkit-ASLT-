@@ -77,6 +77,11 @@ namespace ASLTv1.Forms
         private bool suppressWaypointClickOnce;
         private bool _isDirty = false;
         private bool _isVideoLoading;  // RELI-06: 영상 로드 중이면 true — UI 잠금 트리거
+        // RELI-06 (05.5-02 gap closure): 첫 프레임이 실제로 화면에 페인트된 직후 true 로 전이.
+        // LoadFrame 및 모든 사용자-트리거 탐색 경로에서 이 플래그로 cold-decoder 구간의 seek 폭주를 차단한다.
+        private bool _isVideoReady;
+        // 자동 재생을 first-paint 이후로 연기하기 위한 one-shot 플래그.
+        private bool _pendingAutoPlay;
         /// <summary>
         /// DF-1-05 (D-09): Waypoint 생성 등으로 자동 저장된 JSON 경로를 추적.
         /// 영상 전환 또는 앱 종료 시 "저장하지 않은 편집" 프롬프트에서 '아니요' 선택 시 롤백 삭제 대상.
@@ -341,6 +346,9 @@ namespace ASLTv1.Forms
 
             // RELI-06: UI 잠금 + 로딩 라벨 표시
             _isVideoLoading = true;
+            // RELI-06 (05.5-02 gap closure): ready-gate 리셋 — 첫 프레임 페인트까지 false 유지
+            _isVideoReady = false;
+            _pendingAutoPlay = false;
             panelVideoControls.Enabled = false;
             labelLoading.Visible = true;
             CenterLoadingLabel();
@@ -387,10 +395,22 @@ namespace ASLTv1.Forms
                 // Load JSON
                 await LoadLabelingData(filePath);
 
-                // Auto play
-                if (!isPlaying)
+                // RELI-06 (05.5-02 gap closure): 자동 재생을 first-paint handshake 로 연기.
+                // _isVideoReady 는 pictureBoxVideo.Paint 에서 첫 프레임이 실제 페인트된 직후 true 로 전이되고,
+                // 이 때 _pendingAutoPlay 가 소비되어 btnPlay_Click 이 호출된다.
+                // 기존 code path(즉시 btnPlay_Click)는 cold-decoder 완료 전 timer 가 seek 폭주하는 원인이었음.
+                _pendingAutoPlay = true;
+                // Race: Paint 이벤트가 이미 fire 되어 _isVideoReady 가 true 로 전이된 경우
+                // (LoadLabelingData 의 await 기간 중 paint 가 먼저 완료될 수 있음),
+                // handshake 는 _pendingAutoPlay 를 false 상태에서 읽었으므로 auto-play 가 누락된다.
+                // 이를 복구하기 위한 belt-and-suspenders:
+                if (_isVideoReady)
                 {
-                    btnPlay_Click(null, EventArgs.Empty);
+                    _pendingAutoPlay = false;
+                    if (!isPlaying)
+                    {
+                        btnPlay_Click(null, EventArgs.Empty);
+                    }
                 }
             }
             catch (OperationCanceledException)
@@ -451,6 +471,9 @@ namespace ASLTv1.Forms
             try
             {
                 if (!_videoService.IsVideoLoaded) return;
+                // RELI-06 (05.5-02): cold-decoder 기간 LoadFrame 차단 — 첫 프레임이 페인트되기 전엔 어떠한 seek 도 수행하지 않음.
+                // D-08: 조용히 return (로그/다이얼로그 없음). 호출측 가드와 중복이지만 belt-and-suspenders.
+                if (!_isVideoReady) return;
                 if (frameIndex < 0 || frameIndex >= _videoService.TotalFrames) return;
 
                 var bitmap = _videoService.LoadFrame(frameIndex);
@@ -908,6 +931,8 @@ namespace ASLTv1.Forms
         {
             // RELI-06: 영상 로드 중에는 타이머 틱 무시 (타이머 Stop과 중복 방어)
             if (_isVideoLoading) return;
+            // RELI-06 (05.5-02): 첫 프레임 페인트 전 cold-decoder 기간 틱 무시
+            if (!_isVideoReady) return;
 
             long currentTime = DateTime.Now.Ticks / 10000;
             long elapsedMs = currentTime - lastFrameTime;
@@ -932,6 +957,8 @@ namespace ASLTv1.Forms
 
         private void btnRewind_Click(object sender, EventArgs e)
         {
+            // RELI-06 (05.5-02): cold-decoder 기간 Rewind 무시
+            if (!_isVideoReady) return;
             int framesToMove = (int)(_videoService.Fps * 5);
             int newFrame = Math.Max(0, _videoService.CurrentFrameIndex - framesToMove);
             LoadFrame(newFrame);
@@ -939,6 +966,8 @@ namespace ASLTv1.Forms
 
         private void btnForward_Click(object sender, EventArgs e)
         {
+            // RELI-06 (05.5-02): cold-decoder 기간 Forward 무시
+            if (!_isVideoReady) return;
             int framesToMove = (int)(_videoService.Fps * 5);
             int newFrame = Math.Min(_videoService.TotalFrames - 1, _videoService.CurrentFrameIndex + framesToMove);
             LoadFrame(newFrame);
@@ -1294,6 +1323,8 @@ namespace ASLTv1.Forms
 
         private void listViewPersonWaypoints_Click(object sender, EventArgs e)
         {
+            // RELI-06 (05.5-02): cold-decoder 기간 Waypoint 리스트 클릭 무시
+            if (!_isVideoReady) return;
             if (suppressWaypointClickOnce) { suppressWaypointClickOnce = false; return; }
             if (listViewPersonWaypoints.SelectedItems.Count > 0)
             {
@@ -1310,6 +1341,8 @@ namespace ASLTv1.Forms
 
         private void listViewVehicleWaypoints_Click(object sender, EventArgs e)
         {
+            // RELI-06 (05.5-02): cold-decoder 기간 Waypoint 리스트 클릭 무시
+            if (!_isVideoReady) return;
             if (suppressWaypointClickOnce) { suppressWaypointClickOnce = false; return; }
             if (listViewVehicleWaypoints.SelectedItems.Count > 0)
             {
@@ -1326,6 +1359,8 @@ namespace ASLTv1.Forms
 
         private void listViewEventWaypoints_Click(object sender, EventArgs e)
         {
+            // RELI-06 (05.5-02): cold-decoder 기간 Waypoint 리스트 클릭 무시
+            if (!_isVideoReady) return;
             if (suppressWaypointClickOnce) { suppressWaypointClickOnce = false; return; }
             if (listViewEventWaypoints.SelectedItems.Count > 0)
             {
@@ -1562,6 +1597,21 @@ namespace ASLTv1.Forms
                 Color boxColor = GetColorForLabel(drawingBox.Label);
                 using (Pen pen = new Pen(boxColor, 3) { DashStyle = DashStyle.Dash })
                     g.DrawRectangle(pen, viewRect.X, viewRect.Y, viewRect.Width, viewRect.Height);
+            }
+
+            // RELI-06 (05.5-02 gap closure): first-paint handshake —
+            // 첫 프레임이 실제로 화면에 페인트된 직후 한 번만 ready 전이 + 지연된 자동 재생 소비.
+            if (!_isVideoReady && _videoService.IsVideoLoaded && pictureBoxVideo.Image != null)
+            {
+                _isVideoReady = true;
+                if (_pendingAutoPlay)
+                {
+                    _pendingAutoPlay = false;
+                    if (!isPlaying)
+                    {
+                        btnPlay_Click(null, EventArgs.Empty);
+                    }
+                }
             }
         }
 
@@ -2337,6 +2387,8 @@ namespace ASLTv1.Forms
             // RELI-06: 영상 로드 완료 전 타임라인 입력 무시 (조용히 return, D-08)
             if (!_videoService.IsVideoLoaded) return;
             if (_videoService.TotalFrames == 0) return;
+            // RELI-06 (05.5-02): cold-decoder 기간 타임라인 클릭 무시
+            if (!_isVideoReady) return;
 
             // 세그먼트 클릭 감지 먼저
             if (TryNavigateToMarker(e.X, e.Y))
@@ -2351,6 +2403,8 @@ namespace ASLTv1.Forms
         {
             // RELI-06: 영상 로드 완료 전 드래그 이동 무시
             if (!_videoService.IsVideoLoaded) return;
+            // RELI-06 (05.5-02): cold-decoder 기간 드래그 이동 무시
+            if (!_isVideoReady) return;
             if (isTimelineDragging && _videoService.TotalFrames > 0)
                 UpdateFrameFromTimeline(e.X);
         }
@@ -2559,7 +2613,8 @@ namespace ASLTv1.Forms
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             bool isVideoLoaded = _videoService.IsVideoLoaded;
-            if (isVideoLoaded)
+            // RELI-06 (05.5-02): 화살표 seek 폭주 방지 — isVideoReady 전엔 seek 키 무시.
+            if (isVideoLoaded && _isVideoReady)
             {
                 if (keyData == (Keys.Shift | Keys.Left)) { LoadFrame(Math.Max(0, _videoService.CurrentFrameIndex - (int)(_videoService.Fps * 2))); return true; }
                 if (keyData == (Keys.Shift | Keys.Right)) { LoadFrame(Math.Min(_videoService.TotalFrames - 1, _videoService.CurrentFrameIndex + (int)(_videoService.Fps * 2))); return true; }

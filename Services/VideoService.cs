@@ -148,7 +148,8 @@ namespace ASLTv1.Services
             fps = videoCapture.Get(VideoCaptureProperties.Fps);
             currentFrameIndex = 0;
 
-            LoadFrame(0);
+            // RELI-06 (05.5-02): 첫 프레임 로드는 MainForm.LoadVideoWithSubtitle 에서 수행.
+            // 여기서 호출하면 동일한 cold-decoder seek 가 두 번 발생하여 ~1fps 지연의 원인이 됨.
 
             // DF-1-17 (D-17a): 영상 로드 감사 이벤트 — 성공 경로에서만
             LogService.AuditVideoLoad(filePath);
