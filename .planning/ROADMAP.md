@@ -146,7 +146,7 @@ Plans:
   12. 시스템 주요 동작 로그(영상 로드/BBOX 생성·삭제/Waypoint/Export/예외 등)가 감사 이벤트로 기록되고 HMAC 기반 무결성 체인으로 변조를 검출할 수 있다
 **Plans**: 5 plans
 Plans:
-- [ ] 05.6-01-crash-guard-PLAN.md — DF-1-13 영상 미로드 + Entry/Exit 크래시 가드 (btnEntry/Exit_Click + Keys.E/X)
+- [x] 05.6-01-crash-guard-PLAN.md — DF-1-13 영상 미로드 + Entry/Exit 크래시 가드 (btnEntry/Exit_Click + Keys.E/X)
 - [ ] 05.6-02-id-subsystem-PLAN.md — ID 관리 재설계 (NEW-01~07): ChangeBoxIdOnly, Ctrl+N 신규, Event 불일치 경고, 포커스 가드, Person NumericUpDown, BBOX 생성 ID 승계
 - [ ] 05.6-03-bbox-waypoint-json-PLAN.md — Waypoint 동반 삭제 + Empty JSON 방지 + 영상 전환 롤백 삭제 (DF-1-03, 04, 05, 16)
 - [ ] 05.6-04-usability-PLAN.md — 온보딩 가이드 + 한국어 메시지 + Waypoint 일괄 삭제 + Tab/Undo UAT 체크포인트 (DF-1-06, 07, 11, 14, 18)
