@@ -850,7 +850,20 @@ namespace ASLTv1.Forms
             // USAB-09: Waypoint 선택 상태이면 해당 EntryFrame으로 이동, 아니면 기존 지정 동작
             if (selectedWaypoint != null)
             {
+                // DF-1-13: 영상 미로드 상태에서 LoadFrame 진입 방지
+                if (!_videoService.IsVideoLoaded)
+                {
+                    MessageBox.Show("영상을 먼저 로드해 주십시오.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
                 LoadFrame(selectedWaypoint.EntryFrame);
+                return;
+            }
+
+            // DF-1-13: 영상 미로드 상태에서 Entry 클릭 시 TimeSpan.FromSeconds(NaN) 크래시 차단
+            if (!_videoService.IsVideoLoaded)
+            {
+                MessageBox.Show("영상을 먼저 로드해 주십시오.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             SetEntryMarker();
@@ -858,6 +871,9 @@ namespace ASLTv1.Forms
 
         private void SetEntryMarker()
         {
+            // DF-1-13: 호출자 누락 대비 방어선 (단축키 경로 안전망)
+            if (!_videoService.IsVideoLoaded) return;
+
             entryFrameIndex = _videoService.CurrentFrameIndex;
             TimeSpan entryTime = TimeSpan.FromSeconds(_videoService.CurrentFrameIndex / _videoService.Fps);
             btnEntry.Text = $"Entry: {entryTime:hh\\:mm\\:ss}";
@@ -869,9 +885,23 @@ namespace ASLTv1.Forms
             // USAB-09: Waypoint 선택 상태이면 해당 ExitFrame으로 이동, 아니면 기존 지정 동작
             if (selectedWaypoint != null)
             {
+                // DF-1-13: 영상 미로드 상태에서 LoadFrame 진입 방지
+                if (!_videoService.IsVideoLoaded)
+                {
+                    MessageBox.Show("영상을 먼저 로드해 주십시오.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
                 LoadFrame(selectedWaypoint.ExitFrame);
                 return;
             }
+
+            // DF-1-13: 영상 미로드 상태에서 Exit 클릭 시 fps==0 연산 차단
+            if (!_videoService.IsVideoLoaded)
+            {
+                MessageBox.Show("영상을 먼저 로드해 주십시오.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             try
             {
                 await SetExitMarkerAndCreateWaypoint();
@@ -892,6 +922,9 @@ namespace ASLTv1.Forms
 
         private async Task SetExitMarkerAndCreateWaypoint()
         {
+            // DF-1-13: 호출자 누락 대비 방어선 (단축키 경로 안전망)
+            if (!_videoService.IsVideoLoaded) return;
+
             int currentFrameIndex = _videoService.CurrentFrameIndex;
             double fps = _videoService.Fps;
 
@@ -2410,7 +2443,7 @@ namespace ASLTv1.Forms
                 }
             }
 
-            if (!_videoService.IsVideoLoaded) return;
+            if (!_videoService.IsVideoLoaded) return;  // DF-1-13: 아래 Keys.E/X 등 영상 의존 브랜치 보호
 
             if (e.KeyCode == Keys.Tab) { CycleSelection(e.Shift); e.Handled = true; return; }
             if (e.KeyCode == Keys.Space) { btnPlay_Click(sender, e); e.Handled = true; }
