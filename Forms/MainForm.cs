@@ -2886,6 +2886,12 @@ namespace ASLTv1.Forms
         /// 같은 Waypoint 내 같은 Label+oldId 의 다른 박스로 전파되지 않으며 Waypoint.ObjectId 도 자동 변경되지 않는다
         /// (Waypoint 단위 일괄 변경은 사용자가 Waypoint 전체를 삭제 후 재생성해야 한다 — 의도적 보수성).
         /// Undo 스택에 등록되어 Ctrl+Z 로 복원 가능.
+        ///
+        /// D-21 (NEW-08 진단): Ctrl+{digit} 으로 ID 변경 시 Rectangle 이 "처음 설정한 박스 좌표" 로
+        /// 고정된다는 사용자 보고(2026-04-24 SC-02 UAT). 코드 감사 결과 ChangeBoxIdOnly/SetBoxId/
+        /// CloneBoundingBox 어느 경로에도 Rectangle 재설정이 없음을 확인. 재현 불가로 진단을 위해
+        /// Rectangle 의 entry/exit 값과 identity 를 Debug.WriteLine 으로 로깅 (릴리스 빌드에서는 비활성).
+        /// 원인 확정 시 D-21 에 실측 값 기입 후 로그 제거.
         /// </summary>
         private void ChangeBoxIdOnly(BoundingBox box, int newId)
         {
@@ -2896,6 +2902,13 @@ namespace ASLTv1.Forms
             // 변경 전 상태 스냅샷 (Undo 복원용)
             var origRect = box.Rectangle;
             var origLabel = box.Label;
+
+            // D-21 (NEW-08 진단): Rectangle entry 스냅샷 — 예상 동작은 origRect == 호출 시점의 Rect.
+            System.Diagnostics.Debug.WriteLine(
+                $"[NEW-08] ChangeBoxIdOnly entry: " +
+                $"hash={System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(box)} " +
+                $"label={origLabel} oldId={oldId} newId={newId} " +
+                $"frame={box.FrameIndex} rect={origRect}");
 
             SetBoxId(box, box.Label, newId);
 
@@ -2914,6 +2927,14 @@ namespace ASLTv1.Forms
             UpdateObjectInfo(box);
             UpdateBboxListDisplay();
             pictureBoxVideo.Invalidate();
+
+            // D-21 (NEW-08 진단): Rectangle exit 스냅샷 — 예상 동작은 origRect == 현재 box.Rectangle.
+            // 만약 rect 가 바뀌었다면 ChangeBoxIdOnly 내부 또는 UpdateBboxListDisplay 경로에서 Rectangle 재설정 발생.
+            System.Diagnostics.Debug.WriteLine(
+                $"[NEW-08] ChangeBoxIdOnly exit:  " +
+                $"hash={System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(box)} " +
+                $"rect={box.Rectangle} " +
+                (box.Rectangle == origRect ? "(Rectangle 보존됨)" : "(!!! Rectangle 변경됨)"));
         }
 
         #endregion
