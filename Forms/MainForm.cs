@@ -2557,10 +2557,14 @@ namespace ASLTv1.Forms
             }
             else if ((e.KeyCode == Keys.Delete || e.KeyCode == Keys.G) && selectedBox != null)
             {
-                AddUndoAction(new UndoAction { Type = UndoActionType.RemoveBox, Box = CloneBoundingBox(selectedBox) });
+                var deletedSnapshot = CloneBoundingBox(selectedBox);  // DF-1-03: Waypoint 매칭용 스냅샷
+                AddUndoAction(new UndoAction { Type = UndoActionType.RemoveBox, Box = deletedSnapshot });
                 boundingBoxes.Remove(selectedBox);
                 selectedBox = null;
-                InvalidateBoxCache(); UpdateBoxCount(); UpdateBboxListDisplay(); pictureBoxVideo.Invalidate(); e.Handled = true;
+                InvalidateBoxCache(); UpdateBoxCount(); UpdateBboxListDisplay(); pictureBoxVideo.Invalidate();
+                // DF-1-03 (D-07): Waypoint 구간 내 마지막 박스였는지 확인 후 동반 삭제 프롬프트
+                PromptWaypointDeletionIfEmpty(deletedSnapshot);
+                e.Handled = true;
             }
             else if (e.KeyCode == Keys.Delete && selectedBox == null)
             {
@@ -2776,15 +2780,65 @@ namespace ASLTv1.Forms
         private void btnDeleteLabel_Click(object sender, EventArgs e)
         {
             if (selectedBox == null) { MessageBox.Show("삭제할 박스를 선택해주세요.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-            AddUndoAction(new UndoAction { Type = UndoActionType.RemoveBox, Box = CloneBoundingBox(selectedBox) });
+            var deletedSnapshot = CloneBoundingBox(selectedBox);  // DF-1-03: Waypoint 매칭용 스냅샷
+            AddUndoAction(new UndoAction { Type = UndoActionType.RemoveBox, Box = deletedSnapshot });
             boundingBoxes.Remove(selectedBox);
             selectedBox = null;
             InvalidateBoxCache(); UpdateBoxCount(); UpdateBboxListDisplay(); pictureBoxVideo.Invalidate();
+            // DF-1-03 (D-07): 사이드바 삭제도 Delete 키와 동일한 Waypoint 동반 삭제 프롬프트
+            PromptWaypointDeletionIfEmpty(deletedSnapshot);
         }
 
         #endregion
 
         #region Helper Methods
+
+        /// <summary>
+        /// DF-1-03 (D-07): BBOX 삭제 후 해당 Waypoint 구간이 비어있는지 체크하고,
+        /// 비어있으면 동반 삭제 프롬프트를 표시한다.
+        /// 사용자 주도의 개별 삭제 경로(Delete/G 키, 사이드바 삭제 버튼)에서만 호출한다.
+        /// Undo/Redo 경로, Waypoint 자체 삭제 경로, 프로그램 정리 경로에서는 호출하지 않는다.
+        /// </summary>
+        /// <param name="deletedBox">방금 삭제된 박스 (Waypoint 매칭 기준 — CloneBoundingBox 스냅샷 권장)</param>
+        private void PromptWaypointDeletionIfEmpty(BoundingBox deletedBox)
+        {
+            if (deletedBox == null) return;
+
+            // 삭제된 박스가 속했던 Waypoint 탐색 (같은 Label + ObjectId + Frame 범위)
+            int deletedId = GetBoxId(deletedBox);
+            var waypoint = waypointMarkers.FirstOrDefault(w =>
+                w.Label == deletedBox.Label
+                && w.ObjectId == deletedId
+                && deletedBox.FrameIndex >= w.EntryFrame
+                && deletedBox.FrameIndex <= w.ExitFrame);
+
+            if (waypoint == null) return;
+
+            // Waypoint 구간 내 같은 Label+ObjectId 박스가 아직 남아있는지
+            bool hasRemaining = boundingBoxes.Any(b =>
+                !b.IsDeleted
+                && b.Label == waypoint.Label
+                && GetBoxId(b) == waypoint.ObjectId
+                && b.FrameIndex >= waypoint.EntryFrame
+                && b.FrameIndex <= waypoint.ExitFrame);
+
+            if (hasRemaining) return;
+
+            var result = MessageBox.Show(
+                "Waypoint 구간 BBOX가 전부 삭제됩니다. 해당 Waypoint도 함께 삭제하시겠습니까?",
+                "Waypoint 삭제",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (result == DialogResult.Yes)
+            {
+                waypointMarkers.Remove(waypoint);
+                if (selectedWaypoint == waypoint) selectedWaypoint = null;
+                UpdateWaypointListView();
+                panelTimeline.Invalidate();
+            }
+            // No 선택 시 Waypoint 유지 (빈 Waypoint — 사용자가 나중에 BBOX 를 다시 추가할 수 있음)
+        }
 
         private int GetBoxId(BoundingBox box)
         {
