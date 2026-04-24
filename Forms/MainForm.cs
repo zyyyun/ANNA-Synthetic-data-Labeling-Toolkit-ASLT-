@@ -75,6 +75,12 @@ namespace ASLTv1.Forms
         private bool suppressWaypointClickOnce;
         private bool _isDirty = false;
         private bool _isVideoLoading;  // RELI-06: 영상 로드 중이면 true — UI 잠금 트리거
+        /// <summary>
+        /// DF-1-05 (D-09): Waypoint 생성 등으로 자동 저장된 JSON 경로를 추적.
+        /// 영상 전환 또는 앱 종료 시 "저장하지 않은 편집" 프롬프트에서 '아니요' 선택 시 롤백 삭제 대상.
+        /// 저장 성공 시 <see cref="SaveCurrentLabelingData"/> 에서 세팅되고, 새 영상 로드 시 리셋된다.
+        /// </summary>
+        private string _autoSavedJsonPath = null;
 
         #endregion
 
@@ -259,10 +265,31 @@ namespace ASLTv1.Forms
                             "저장 확인",
                             MessageBoxButtons.YesNoCancel,
                             MessageBoxIcon.Warning);
-                        if (result == DialogResult.Yes)
-                            SaveCurrentLabelingData();
-                        else if (result == DialogResult.Cancel)
+
+                        if (result == DialogResult.Cancel)
+                        {
                             return;
+                        }
+                        else if (result == DialogResult.Yes)
+                        {
+                            SaveCurrentLabelingData();
+                        }
+                        else // DialogResult.No — DF-1-05 (D-09): 자동 저장된 JSON 롤백 삭제
+                        {
+                            if (!string.IsNullOrEmpty(_autoSavedJsonPath) && File.Exists(_autoSavedJsonPath))
+                            {
+                                try
+                                {
+                                    File.Delete(_autoSavedJsonPath);
+                                    Log.Information("[AUDIT] 영상 전환 시 미저장 JSON 롤백 삭제: {Path}", _autoSavedJsonPath);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Error(ex, "[JSON 롤백 삭제 오류] {Path}", _autoSavedJsonPath);
+                                }
+                            }
+                            _autoSavedJsonPath = null;
+                        }
                     }
                     await LoadVideoWithSubtitle(ofd.FileName);
                 }
@@ -306,6 +333,8 @@ namespace ASLTv1.Forms
 
                 // Reset dirty state on successful video load (USAB-02)
                 _isDirty = false;
+                // DF-1-05 (D-09): 새 영상 로드 시 이전 영상 자동 저장 경로 리셋 — 롤백 대상 아님
+                _autoSavedJsonPath = null;
 
                 // Show first frame
                 var bitmap = _videoService.LoadFrame(0);
@@ -712,6 +741,8 @@ namespace ASLTv1.Forms
 
             currentJsonFile = savePath;
             _isDirty = false;
+            // DF-1-05 (D-09): 저장 성공 경로 기록 — 영상 전환/앱 종료 시 '아니요' 선택하면 롤백 삭제 대상
+            _autoSavedJsonPath = savePath;
         }
 
         private void btnDeleteJson_Click(object sender, EventArgs e)
@@ -3198,14 +3229,30 @@ namespace ASLTv1.Forms
                     "저장 확인",
                     MessageBoxButtons.YesNoCancel,
                     MessageBoxIcon.Warning);
-                if (result == DialogResult.Yes)
-                {
-                    SaveCurrentLabelingData();
-                }
-                else if (result == DialogResult.Cancel)
+                if (result == DialogResult.Cancel)
                 {
                     e.Cancel = true;
                     return;
+                }
+                else if (result == DialogResult.Yes)
+                {
+                    SaveCurrentLabelingData();
+                }
+                else // DialogResult.No — DF-1-05 (D-09): 앱 종료 시에도 자동 저장 JSON 롤백 삭제 (비디오 전환과 동일 UX)
+                {
+                    if (!string.IsNullOrEmpty(_autoSavedJsonPath) && File.Exists(_autoSavedJsonPath))
+                    {
+                        try
+                        {
+                            File.Delete(_autoSavedJsonPath);
+                            Log.Information("[AUDIT] 앱 종료 시 미저장 JSON 롤백 삭제: {Path}", _autoSavedJsonPath);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "[JSON 롤백 삭제 오류] {Path}", _autoSavedJsonPath);
+                        }
+                    }
+                    _autoSavedJsonPath = null;
                 }
             }
             base.OnFormClosing(e);

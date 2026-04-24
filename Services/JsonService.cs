@@ -641,7 +641,44 @@ namespace ASLTv1.Services
         #region Delete JSON
 
         /// <summary>
-        /// Deletes the JSON file for a given video.
+        /// DF-1-04 (D-08) / DF-1-05 (D-09): 비디오에 대응하는 COCO JSON 파일을 삭제하고
+        /// 감사 이벤트를 기록한다. 경로 트래버설 방지 검증 포함.
+        /// Wave 5 에서 <c>LogService.AuditJsonDelete</c> 래퍼로 전환될 수 있음.
+        /// </summary>
+        /// <param name="videoFilePath">비디오 파일 경로 (labels/ 서브폴더의 대응 JSON 탐색 기준)</param>
+        /// <returns>파일이 실제로 삭제되었으면 true, 존재하지 않거나 경로 검증 실패면 false</returns>
+        /// <exception cref="IOException">파일 삭제 I/O 오류</exception>
+        /// <exception cref="UnauthorizedAccessException">삭제 권한 없음</exception>
+        public bool DeleteJsonForVideo(string videoFilePath)
+        {
+            string? jsonPath = ResolveJsonPath(videoFilePath);
+            if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))
+                return false;
+
+            // 경로 트래버설 방지 재검증 (SECU-04 패턴 — ResolveJsonPath 이미 수행하지만 방어선 이중화)
+            string? videoDir = Path.GetDirectoryName(videoFilePath);
+            if (!string.IsNullOrEmpty(videoDir) && !PathValidator.IsPathSafe(jsonPath, videoDir))
+            {
+                Log.Warning("[보안] 삭제 경로 트래버설 감지: {Path}", jsonPath);
+                return false;
+            }
+
+            try
+            {
+                File.Delete(jsonPath);
+                Log.Information("[AUDIT] JSON 파일 삭제: {Path}", jsonPath);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[JSON 삭제 오류] {Path}", jsonPath);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Legacy helper — DF-1-04 이전에 도입된 삭제 API. 내부적으로 <see cref="DeleteJsonForVideo"/> 로 위임하여
+        /// 감사 로그 일관성을 유지한다. <paramref name="currentJsonFile"/> 힌트가 있으면 우선적으로 해당 경로를 확인한다.
         /// </summary>
         /// <returns>True if a file was deleted, false if no file existed.</returns>
         public bool DeleteJsonFileForVideo(string videoFilePath, string? currentJsonFile = null)
@@ -650,34 +687,29 @@ namespace ASLTv1.Services
             if (string.IsNullOrEmpty(videoDir) || !Directory.Exists(videoDir))
                 return false;
 
-            string saveDir = Path.Combine(videoDir, "labels");
-
-            string? jsonPath = null;
-
+            // Hint 경로가 유효하면 그대로 감사 삭제
             if (!string.IsNullOrEmpty(currentJsonFile) && File.Exists(currentJsonFile))
             {
-                // 경로 트래버설 방지 검증
                 if (!PathValidator.IsPathSafe(currentJsonFile, videoDir))
                 {
                     Log.Warning("[보안] 삭제 경로 트래버설 감지: {Path}", currentJsonFile);
                     return false;
                 }
-                jsonPath = currentJsonFile;
+                try
+                {
+                    File.Delete(currentJsonFile);
+                    Log.Information("[AUDIT] JSON 파일 삭제: {Path}", currentJsonFile);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "[JSON 삭제 오류] {Path}", currentJsonFile);
+                    throw;
+                }
             }
-            else
-            {
-                string baseFileName = Path.GetFileNameWithoutExtension(videoFilePath);
-                string normalPath = Path.Combine(saveDir, baseFileName + "_labels.json");
 
-                if (File.Exists(normalPath))
-                    jsonPath = normalPath;
-            }
-
-            if (jsonPath == null)
-                return false;
-
-            File.Delete(jsonPath);
-            return true;
+            // Hint 없으면 DeleteJsonForVideo 경로 (ResolveJsonPath 기반 탐색)
+            return DeleteJsonForVideo(videoFilePath);
         }
 
         #endregion
