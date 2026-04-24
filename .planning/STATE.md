@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05.6-03-bbox-waypoint-json-PLAN.md
-last_updated: "2026-04-24T02:06:23.894Z"
+stopped_at: "Completed 05.6-04-usability-PLAN.md (UAT-driven: 4 bugs found + fixed)"
+last_updated: "2026-04-24T06:05:05.666Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 19
-  completed_plans: 16
-  percent: 80
+  completed_plans: 17
+  percent: 89
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 05.6 (결함수정) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-04-24
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [████████░░] 80%
 | Phase 05.6-결함수정 P01 | 4min | 1 tasks | 1 files |
 | Phase 05.6-결함수정 P02 | 9min | 4 tasks | 1 files |
 | Phase 05.6-결함수정 P03 | 4min | 3 tasks | 2 files |
+| Phase 05.6-결함수정 P04 | 3h24min | 5 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,11 @@ Recent decisions affecting current work:
 - [Phase 05.6-결함수정]: DF-1-05: _autoSavedJsonPath 단일 choke-point — SaveCurrentLabelingData 내부 한 곳에서만 세팅, 영상 전환/앱 종료 DialogResult.No 분기 롤백 삭제 (OnFormClosing 확장 Rule 2)
 - [Phase 05.6-결함수정]: DF-1-04: btnExportJson_Click Empty-state 이중 프롬프트 — 기존 JSON 존재 시 D-08 YesNo 삭제 / 부재 시 Information 알림
 - [Phase 05.6-결함수정]: JsonService.DeleteJsonForVideo 신규 + PathValidator 방어선 + [AUDIT] JSON 파일 삭제 감사 로그 — Wave 5 AuditJsonDelete 훅 앵커, Legacy DeleteJsonFileForVideo 는 위임 (Rule 1 중복 제거)
+- [Phase 05.6-결함수정]: DF-1-06: Tab 분기는 dead code (ProcessDialogKey 가 Tab 흡수) — ProcessCmdKey intercept 로 BBOX 순환 활성화, 플랜 '이미 구현' 전제 무효화
+- [Phase 05.6-결함수정]: DF-1-07: PushModifyBoxUndo 공용 헬퍼 + per-keystroke W/A/S/D + drag/resize no-op 차등 — Original* 3필드 계약 강제
+- [Phase 05.6-결함수정]: DF-1-07: Undo AddBox / Redo RemoveBox 2단계 매칭 (ReferenceEquals fast-path + Frame+Label+Id+Rectangle 값 매칭) — clone round-trip + 같은 클래스·Id ambiguity 동시 해결
+- [Phase 05.6-결함수정]: DF-1-11: SettingsService 정적 캐시 + Newtonsoft.Json + try/catch 방어선 — %LOCALAPPDATA%\ANNA\ASLT\settings.json 영속화, OnShown 이벤트 기반 온보딩 트리거
+- [Phase 05.6-결함수정]: UAT 없이는 '조치완료' 선언 신뢰 금지 — DEFECTS-INBOX status 컬럼 '조치완료' 여도 checkpoint:human-verify 없다면 실제 동작 불확실 (향후 유사 결함 처리 원칙)
 
 ### Roadmap Evolution
 
@@ -125,6 +131,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-24T02:06:23.888Z
-Stopped at: Completed 05.6-03-bbox-waypoint-json-PLAN.md
+Last session: 2026-04-24T06:04:27.608Z
+Stopped at: Completed 05.6-04-usability-PLAN.md (UAT-driven: 4 bugs found + fixed)
 Resume file: None

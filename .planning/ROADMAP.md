@@ -149,7 +149,7 @@ Plans:
 - [x] 05.6-01-crash-guard-PLAN.md — DF-1-13 영상 미로드 + Entry/Exit 크래시 가드 (btnEntry/Exit_Click + Keys.E/X)
 - [x] 05.6-02-id-subsystem-PLAN.md — ID 관리 재설계 (NEW-01~07): ChangeBoxIdOnly, Ctrl+N 신규, Event 불일치 경고, 포커스 가드, Person NumericUpDown, BBOX 생성 ID 승계
 - [x] 05.6-03-bbox-waypoint-json-PLAN.md — Waypoint 동반 삭제 + Empty JSON 방지 + 영상 전환 롤백 삭제 (DF-1-03, 04, 05, 16)
-- [ ] 05.6-04-usability-PLAN.md — 온보딩 가이드 + 한국어 메시지 + Waypoint 일괄 삭제 + Tab/Undo UAT 체크포인트 (DF-1-06, 07, 11, 14, 18)
+- [x] 05.6-04-usability-PLAN.md — 온보딩 가이드 + 한국어 메시지 + Waypoint 일괄 삭제 + Tab/Undo UAT 체크포인트 (DF-1-06, 07, 11, 14, 18)
 - [ ] 05.6-05-secure-logging-PLAN.md — 감사 이벤트 9종 확장 + HMAC 무결성 체인 + 키 관리 + 검증 유틸 (DF-1-17)
 
 ### Phase 6: 문서화
@@ -175,5 +175,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 5.5 → 5.6 → 6
 | 4. 성능 + 사용성 | 3/3 | Complete   | 2026-04-17 |
 | 5. 이식성 | 2/2 | Complete   | 2026-04-17 |
 | 5.5. 기능 보정 + 안정화 | 1/2 | In progress | - |
-| 5.6. 결함수정 (INSERTED) | 0/5 | Planned | - |
+| 5.6. 결함수정 (INSERTED) | 4/5 | In progress | - |
 | 6. 문서화 | 0/TBD | Not started | - |
