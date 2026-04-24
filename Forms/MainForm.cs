@@ -67,6 +67,8 @@ namespace ASLTv1.Forms
         private System.Drawing.Point dragOffset;
         private System.Drawing.Point resizeStartPoint;
         private Rectangle originalResizeRect;
+        // DF-1-07 (05.6-04 Task 5-B): MouseDown 시 drag 시작 전 Rectangle 스냅샷 — MouseUp 에서 변경된 경우에만 ModifyBox undo 푸시
+        private Rectangle originalDragRect;
         private bool isWaitingForDoubleClick;
         private System.Drawing.Point lastClickPoint;
         private System.Threading.Timer doubleClickTimer;
@@ -1662,6 +1664,8 @@ namespace ASLTv1.Forms
                             isWaitingForDoubleClick = true;
                             lastClickPoint = e.Location;
                             dragOffset = new System.Drawing.Point(e.X - (int)viewRect.X, e.Y - (int)viewRect.Y);
+                            // DF-1-07 (05.6-04 Task 5-B): double-click 대기 경로에서도 drag 시작점 rect 스냅샷 (타이머 경과 후 drag 전환 시 사용)
+                            originalDragRect = selectedBox.Rectangle;
                             doubleClickTimer?.Dispose();
                             doubleClickTimer = new System.Threading.Timer((state) =>
                             {
@@ -1687,6 +1691,8 @@ namespace ASLTv1.Forms
                         {
                             isDragging = true;
                             dragOffset = new System.Drawing.Point(e.X - (int)viewRect.X, e.Y - (int)viewRect.Y);
+                            // DF-1-07 (05.6-04 Task 5-B): drag 시작 시점 rect 스냅샷 (MouseUp 에서 undo 푸시 판정용)
+                            originalDragRect = selectedBox.Rectangle;
                             UpdateObjectInfo(selectedBox);
                             HighlightSelectedBoxInSidebar();
                             pictureBoxVideo.Invalidate();
@@ -1703,6 +1709,8 @@ namespace ASLTv1.Forms
                     var viewRect = CoordinateHelper.ImageToView(
                         new RectangleF(selectedBox.Rectangle.X, selectedBox.Rectangle.Y, selectedBox.Rectangle.Width, selectedBox.Rectangle.Height), pictureBoxVideo);
                     dragOffset = new System.Drawing.Point(e.X - (int)viewRect.X, e.Y - (int)viewRect.Y);
+                    // DF-1-07 (05.6-04 Task 5-B): drag 시작 시점 rect 스냅샷 (MouseUp 에서 undo 푸시 판정용)
+                    originalDragRect = selectedBox.Rectangle;
                     UpdateObjectInfo(selectedBox);
                     UpdateBboxListDisplay();
                     HighlightSelectedBoxInSidebar();
@@ -1827,9 +1835,13 @@ namespace ASLTv1.Forms
                 isResizing = false;
                 currentResizeHandle = ResizeHandle.None;
                 if (selectedBox == null) return;  // RELI-04 null guard
-                var undoBox = CloneBoundingBox(selectedBox);
-                undoBox.Rectangle = originalResizeRect;
-                AddUndoAction(new UndoAction { Type = UndoActionType.ModifyBox, Box = undoBox });
+                // DF-1-07 (05.6-04 Task 5-B): 기존 코드는 Box.Rectangle 에 originalResizeRect 를 넣고 OriginalRectangle/Label/ObjectId 는
+                // 세팅하지 않아서 Undo() 가 boxToModify.Rectangle = (0,0,0,0), Label = null, Id = 0 으로 복원하는 심각한 버그였음.
+                // 수정: Box 는 변경 후 상태(라이브 박스 탐색용), Original* 필드에 되돌릴 값을 채운다.
+                if (selectedBox.Rectangle != originalResizeRect)
+                {
+                    PushModifyBoxUndo(selectedBox, originalResizeRect, selectedBox.Label, GetBoxId(selectedBox));
+                }
                 InvalidateBoxCache();
                 if (selectedBox != null)
                 {
@@ -1849,6 +1861,13 @@ namespace ASLTv1.Forms
                     isDragging = false;
                     if (selectedBox != null)
                     {
+                        // DF-1-07 (05.6-04 Task 5-B): drag 로 rect 가 실제 변경된 경우에만 ModifyBox Undo 엔트리 푸시.
+                        // 단순 클릭 (drag 거리 0) 에서는 엔트리 미생성 — 불필요한 undo stack 축적 방지.
+                        if (selectedBox.Rectangle != originalDragRect)
+                        {
+                            PushModifyBoxUndo(selectedBox, originalDragRect, selectedBox.Label, GetBoxId(selectedBox));
+                        }
+
                         if (selectedBox.Label == "event")
                             PropagateEventBoxFromCurrentFrame(selectedBox);
                         else if (selectedBox.Label == "person" || selectedBox.Label == "vehicle")
@@ -2359,6 +2378,25 @@ namespace ASLTv1.Forms
             redoStack.Clear();
         }
 
+        /// <summary>
+        /// DF-1-07 (05.6-04 Task 5-B): ModifyBox 용 Undo 엔트리 표준 생성 헬퍼.
+        /// Undo() 핸들러 계약:
+        ///   - action.Box          = 변경 후 상태 (GetBoxId + Label + FrameIndex 로 라이브 박스 탐색)
+        ///   - OriginalRectangle/Label/ObjectId = 되돌릴 원본 값 (세 필드 모두 반드시 채워야 함)
+        /// 호출처: W/A/S/D 키 이동, 마우스 drag 이동 MouseUp, 마우스 resize MouseUp.
+        /// </summary>
+        private void PushModifyBoxUndo(BoundingBox currentState, Rectangle originalRect, string originalLabel, int originalObjectId)
+        {
+            AddUndoAction(new UndoAction
+            {
+                Type = UndoActionType.ModifyBox,
+                Box = CloneBoundingBox(currentState),
+                OriginalRectangle = originalRect,
+                OriginalLabel = originalLabel,
+                OriginalObjectId = originalObjectId,
+            });
+        }
+
         private void Undo()
         {
             if (undoStack.Count == 0) return;
@@ -2683,12 +2721,20 @@ namespace ASLTv1.Forms
             else if (selectedBox != null && !e.Control && (e.KeyCode == Keys.W || e.KeyCode == Keys.A || e.KeyCode == Keys.S || e.KeyCode == Keys.D))
             {
                 int moveAmount = e.Shift ? 10 : 2;
+                // DF-1-07 (05.6-04 Task 5-B): 변경 전 rect 스냅샷 — 각 키 입력을 독립적인 Undo 단위로 푸시
+                Rectangle originalRect = selectedBox.Rectangle;
                 Rectangle rect = selectedBox.Rectangle;
                 switch (e.KeyCode) { case Keys.W: rect.Y -= moveAmount; break; case Keys.A: rect.X -= moveAmount; break; case Keys.S: rect.Y += moveAmount; break; case Keys.D: rect.X += moveAmount; break; }
                 // FUNC-03: 이미지 범위 클램핑
                 if (pictureBoxVideo.Image != null)
                     rect = CoordinateHelper.ClampToImage(rect, pictureBoxVideo.Image.Width, pictureBoxVideo.Image.Height);
-                selectedBox.Rectangle = rect; pictureBoxVideo.Invalidate(); e.Handled = true;
+                // 실제 rect 가 변경된 경우에만 Undo 푸시 (클램핑으로 변화 없을 때 stack 오염 방지)
+                if (rect != originalRect)
+                {
+                    selectedBox.Rectangle = rect;
+                    PushModifyBoxUndo(selectedBox, originalRect, selectedBox.Label, GetBoxId(selectedBox));
+                }
+                pictureBoxVideo.Invalidate(); e.Handled = true;
             }
             else if ((e.KeyCode == Keys.Delete || e.KeyCode == Keys.G) && selectedBox != null)
             {
