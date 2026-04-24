@@ -199,6 +199,31 @@ namespace ASLTv1.Forms
             panelVideoControls_Resize(panelVideoControls, EventArgs.Empty);
         }
 
+        /// <summary>
+        /// DF-1-11 (D-14): 메인 폼이 처음 표시된 직후 온보딩 가이드 팝업을 띄운다.
+        /// SettingsService.IsFirstRun() == true 인 경우에만 표시 — "다시 보지 않기" 체크
+        /// + '완료' 를 누르면 settings.json 에 OnboardingShown=true 영속화되어 재표시되지 않는다.
+        /// </summary>
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            if (Services.SettingsService.IsFirstRun())
+            {
+                try
+                {
+                    using (var onboard = new OnboardingForm())
+                    {
+                        onboard.ShowDialog(this);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "[온보딩 표시 실패] 앱 동작에 영향 없이 계속 진행");
+                }
+            }
+        }
+
         private void HandleListViewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Space)
