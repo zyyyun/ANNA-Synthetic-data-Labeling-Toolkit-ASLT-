@@ -2941,6 +2941,10 @@ namespace ASLTv1.Forms
                 }
                 else
                 {
+                    // NEW-06 (D-05): Person 분기도 Vehicle/Event 처럼 ID 변경 UI 제공
+                    // Person ID 는 1~20 (Ctrl+1~0 + Alt+1~0) → NumericUpDown(Min=1, Max=20)
+                    int currentId = GetBoxId(capturedBox);
+
                     var label = new Label
                     {
                         Text = text, AutoSize = false, Dock = DockStyle.Fill,
@@ -2949,8 +2953,35 @@ namespace ASLTv1.Forms
                         TextAlign = ContentAlignment.MiddleLeft,
                         Padding = new Padding(5, 0, 0, 0)
                     };
+
+                    var numericId = new NumericUpDown
+                    {
+                        Minimum = 1,
+                        Maximum = 20,
+                        Value = Math.Max(1, Math.Min(20, currentId)),
+                        Width = 50,
+                        Dock = DockStyle.Right,
+                        BackColor = DarkTheme.Panel,
+                        ForeColor = DarkTheme.TextPrimary,
+                        BorderStyle = BorderStyle.None,
+                        TabStop = false,
+                        Font = new Font("Segoe UI", 8F)
+                    };
+                    numericId.ValueChanged += (s, ev) =>
+                    {
+                        int newId = (int)numericId.Value;
+                        if (newId != GetBoxId(capturedBox))
+                        {
+                            selectedBox = capturedBox;
+                            ChangeBoxIdOnly(capturedBox, newId);
+                        }
+                    };
+
                     label.Click += (s, ev) => { selectedBox = capturedBox; UpdateObjectInfo(capturedBox); HighlightSelectedBoxInSidebar(); pictureBoxVideo.Invalidate(); };
                     itemPanel.Click += (s, ev) => { selectedBox = capturedBox; UpdateObjectInfo(capturedBox); HighlightSelectedBoxInSidebar(); pictureBoxVideo.Invalidate(); };
+
+                    // WinForms 도킹: DockStyle.Right 를 먼저 추가해야 Fill 이 나머지 영역만 점유
+                    itemPanel.Controls.Add(numericId);
                     itemPanel.Controls.Add(label);
                 }
 
