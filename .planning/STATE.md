@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: "Completed 05.6-04-usability-PLAN.md (UAT-driven: 4 bugs found + fixed)"
-last_updated: "2026-04-24T06:05:05.666Z"
+status: verifying
+stopped_at: Completed 05.6-05-secure-logging-PLAN.md — Phase 05.6 전체 완료 (5/5 plans, DF-1-03/04/05/06/07/11/13/14/16/17/18 + NEW-01~07)
+last_updated: "2026-04-24T06:24:40.445Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 19
-  completed_plans: 17
+  completed_plans: 18
   percent: 89
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 
 Phase: 05.6 (결함수정) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-24
 
 Progress: [█████████░] 89%
@@ -68,6 +68,7 @@ Progress: [█████████░] 89%
 | Phase 05.6-결함수정 P02 | 9min | 4 tasks | 1 files |
 | Phase 05.6-결함수정 P03 | 4min | 3 tasks | 2 files |
 | Phase 05.6-결함수정 P04 | 3h24min | 5 tasks | 6 files |
+| Phase 05.6-결함수정 P05-secure-logging | 10min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,9 @@ Recent decisions affecting current work:
 - [Phase 05.6-결함수정]: DF-1-07: Undo AddBox / Redo RemoveBox 2단계 매칭 (ReferenceEquals fast-path + Frame+Label+Id+Rectangle 값 매칭) — clone round-trip + 같은 클래스·Id ambiguity 동시 해결
 - [Phase 05.6-결함수정]: DF-1-11: SettingsService 정적 캐시 + Newtonsoft.Json + try/catch 방어선 — %LOCALAPPDATA%\ANNA\ASLT\settings.json 영속화, OnShown 이벤트 기반 온보딩 트리거
 - [Phase 05.6-결함수정]: UAT 없이는 '조치완료' 선언 신뢰 금지 — DEFECTS-INBOX status 컬럼 '조치완료' 여도 checkpoint:human-verify 없다면 실제 동작 불확실 (향후 유사 결함 처리 원칙)
+- [Phase 05.6-결함수정]: DF-1-17 level c: HmacChainSink (ILogEventSink) + HmacKeyProvider (%LOCALAPPDATA%/.hmac-key 32B RNG) + LogIntegrityVerifier — HMAC-SHA256 체인 무결성 검증 + 30일 보존 유지 + 감사 이벤트 13종 (기존 4 + 신규 9)
+- [Phase 05.6-결함수정]: Cross-day chain continuity — 프로세스 내 rollover 는 in-memory _lastHmac 유지 / 재시작 시 디스크 recovery / 첫 boot 에 prior-day 파일 fallback (GENESIS reset 방지, advisor 가이드)
+- [Phase 05.6-결함수정]: Audit signal quality — BBOX Create 는 MouseUp 1지점만 감사 (propagation 4경로 + Undo/Redo 제외) — 단일 Exit 설정이 50 프레임 전파 시 감사 라인 폭증 방지
 
 ### Roadmap Evolution
 
@@ -131,6 +135,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-24T06:04:27.608Z
-Stopped at: Completed 05.6-04-usability-PLAN.md (UAT-driven: 4 bugs found + fixed)
+Last session: 2026-04-24T06:24:40.440Z
+Stopped at: Completed 05.6-05-secure-logging-PLAN.md — Phase 05.6 전체 완료 (5/5 plans, DF-1-03/04/05/06/07/11/13/14/16/17/18 + NEW-01~07)
 Resume file: None

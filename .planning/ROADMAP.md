@@ -150,7 +150,7 @@ Plans:
 - [x] 05.6-02-id-subsystem-PLAN.md — ID 관리 재설계 (NEW-01~07): ChangeBoxIdOnly, Ctrl+N 신규, Event 불일치 경고, 포커스 가드, Person NumericUpDown, BBOX 생성 ID 승계
 - [x] 05.6-03-bbox-waypoint-json-PLAN.md — Waypoint 동반 삭제 + Empty JSON 방지 + 영상 전환 롤백 삭제 (DF-1-03, 04, 05, 16)
 - [x] 05.6-04-usability-PLAN.md — 온보딩 가이드 + 한국어 메시지 + Waypoint 일괄 삭제 + Tab/Undo UAT 체크포인트 (DF-1-06, 07, 11, 14, 18)
-- [ ] 05.6-05-secure-logging-PLAN.md — 감사 이벤트 9종 확장 + HMAC 무결성 체인 + 키 관리 + 검증 유틸 (DF-1-17)
+- [x] 05.6-05-secure-logging-PLAN.md — 감사 이벤트 9종 확장 + HMAC 무결성 체인 + 키 관리 + 검증 유틸 (DF-1-17)
 
 ### Phase 6: 문서화
 **Goal**: 잠긴 바이너리와 완전히 일치하는 제품설명서 및 사용자취급설명서가 완성된다
