@@ -2404,13 +2404,17 @@ namespace ASLTv1.Forms
             switch (action.Type)
             {
                 case UndoActionType.AddBox:
-                    // DF-1-07 (05.6-04 Task 5-C): 값 기반 매칭 — action.Box 가 clone round-trip 된 경우 참조 불일치로 Remove 실패하던 버그 수정.
-                    // 동일 (FrameIndex, Label, Id) 를 가진 live 박스를 찾아 제거. ModifyBox 가 Rectangle 을 in-place 변경하므로 Rectangle 은 매칭 키에서 제외.
+                    // DF-1-07 (05.6-04 Task 5-D): 2 단계 매칭 — 참조 동일성 fast-path + Rectangle 포함 값 매칭 fallback.
+                    // 5-C 의 (FrameIndex+Label+Id) 만 사용한 값 매칭은 같은 클래스·같은 기본 Id(예: Person Id=1) 박스가
+                    // 3 개 공존할 때 모두 match 되어 FirstOrDefault 가 틀린 박스(A)를 제거하는 회귀 발생.
+                    // Rectangle 을 포함시키되, clone round-trip 된 경우에도 AddBox action.Box 는 live 참조이므로 fast-path 로 선 히트.
                     {
-                        var toRemove = boundingBoxes.FirstOrDefault(b =>
-                            b.FrameIndex == action.Box.FrameIndex &&
-                            b.Label == action.Box.Label &&
-                            GetBoxId(b) == GetBoxId(action.Box));
+                        var toRemove = boundingBoxes.FirstOrDefault(b => ReferenceEquals(b, action.Box))
+                            ?? boundingBoxes.FirstOrDefault(b =>
+                                b.FrameIndex == action.Box.FrameIndex &&
+                                b.Label == action.Box.Label &&
+                                GetBoxId(b) == GetBoxId(action.Box) &&
+                                b.Rectangle == action.Box.Rectangle);
                         if (toRemove != null)
                         {
                             boundingBoxes.Remove(toRemove);
@@ -2437,12 +2441,14 @@ namespace ASLTv1.Forms
             {
                 case UndoActionType.AddBox: boundingBoxes.Add(action.Box); InvalidateBoxCache(); break;
                 case UndoActionType.RemoveBox:
-                    // DF-1-07 (05.6-04 Task 5-C): 값 기반 매칭 — Undo AddBox 가 값 기반으로 수정됨에 따라 대칭성 유지를 위해 Redo RemoveBox 도 동일 패턴 적용.
+                    // DF-1-07 (05.6-04 Task 5-D): Undo AddBox 와 대칭 — 참조 동일성 fast-path + Rectangle 포함 값 매칭 fallback.
                     {
-                        var toRemove = boundingBoxes.FirstOrDefault(b =>
-                            b.FrameIndex == action.Box.FrameIndex &&
-                            b.Label == action.Box.Label &&
-                            GetBoxId(b) == GetBoxId(action.Box));
+                        var toRemove = boundingBoxes.FirstOrDefault(b => ReferenceEquals(b, action.Box))
+                            ?? boundingBoxes.FirstOrDefault(b =>
+                                b.FrameIndex == action.Box.FrameIndex &&
+                                b.Label == action.Box.Label &&
+                                GetBoxId(b) == GetBoxId(action.Box) &&
+                                b.Rectangle == action.Box.Rectangle);
                         if (toRemove != null)
                         {
                             boundingBoxes.Remove(toRemove);
