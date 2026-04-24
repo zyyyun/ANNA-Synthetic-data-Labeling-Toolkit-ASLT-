@@ -637,10 +637,48 @@ namespace ASLTv1.Forms
                     return;
                 }
 
-                if (boundingBoxes.Count == 0)
+                // DF-1-04 (D-08): Waypoint/BBOX 없는 상태에서의 저장 시도 처리
+                // — 기존 "저장할 라벨링 데이터가 없습니다." 단일 메시지를 대체하여 기존 JSON 파일이 있으면
+                //   삭제 프롬프트를 표시하고, 없으면 알림 메시지만 표시한다.
+                if (boundingBoxes.Count == 0 && waypointMarkers.Count == 0)
                 {
-                    MessageBox.Show("저장할 라벨링 데이터가 없습니다.", "경고", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    string? existingJson = _jsonService.ResolveJsonPath(_videoService.CurrentVideoFile);
+                    bool fileExists = !string.IsNullOrEmpty(existingJson) && File.Exists(existingJson);
+
+                    if (fileExists)
+                    {
+                        var decision = MessageBox.Show(
+                            "Waypoint가 없어 해당 JSON 파일은 삭제됩니다. 삭제하시겠습니까?",
+                            "JSON 파일 삭제",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Warning);
+
+                        if (decision == DialogResult.Yes)
+                        {
+                            try
+                            {
+                                _jsonService.DeleteJsonForVideo(_videoService.CurrentVideoFile);
+                                _isDirty = false;
+                                _autoSavedJsonPath = null;   // DF-1-05: 롤백 대상 해소
+                                currentJsonFile = "";
+                                if (labelCurrentJsonFile != null) labelCurrentJsonFile.Text = "";
+                                MessageBox.Show("JSON 파일이 삭제되었습니다.", "알림",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                            catch (Exception delEx)
+                            {
+                                MessageBox.Show($"JSON 파일 삭제 실패:\n{delEx.Message}", "오류",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        MessageBox.Show("저장할 라벨링 데이터가 없어 JSON 파일은 생성되지 않습니다.",
+                            "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
+                    }
                 }
 
                 Form loadingForm = new Form
