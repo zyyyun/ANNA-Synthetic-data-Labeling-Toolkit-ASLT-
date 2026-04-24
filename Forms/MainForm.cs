@@ -327,7 +327,14 @@ namespace ASLTv1.Forms
 
                 if (!_videoService.IsVideoLoaded)
                 {
-                    MessageBox.Show("Failed to open video file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    // DF-1-14 (D-15): 영어 메시지 → 한국어 통일, 제목 "Error" → "오류"
+                    MessageBox.Show(
+                        "비디오 파일을 열 수 없습니다.\n\n" +
+                        "원인: 파일이 손상되었거나 지원하지 않는 확장자일 수 있습니다.\n" +
+                        "해결 방법: MP4(H.264) 등 지원 형식의 파일인지 확인하세요.",
+                        "오류",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                     return;
                 }
 
