@@ -4,7 +4,7 @@
 
 #define MyAppName "ANNA 합성데이터 라벨링 툴킷 (ASLT)"
 #define MyAppNameEn "ASLT - ANNA Synthetic data Labeling Toolkit"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "ANNA"
 #define MyAppExeName "ASLTv1.exe"
 #define PublishDir "..\bin\Release\net8.0-windows\win-x64\publish"
