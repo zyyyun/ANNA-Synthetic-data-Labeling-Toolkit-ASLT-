@@ -132,9 +132,10 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260421-mzz | Codex 교차검증 후속 정리 — installer uninstall + build.bat 내구성 | 2026-04-21 | ef84820 | [260421-mzz-codex-installer-uninstall-build-bat](./quick/260421-mzz-codex-installer-uninstall-build-bat/) |
+| 260427-eyf | Installer 빌드 자동화 + 1.0.0 → 1.0.1 버전 bump + 신규 인스톨러 산출 | 2026-04-27 | dbe7a84 | [260427-eyf-installer-1-0-1](./quick/260427-eyf-installer-1-0-1/) |
 
 ## Session Continuity
 
-Last session: 2026-04-24T06:24:40.440Z
-Stopped at: Completed 05.6-05-secure-logging-PLAN.md — Phase 05.6 전체 완료 (5/5 plans, DF-1-03/04/05/06/07/11/13/14/16/17/18 + NEW-01~07)
+Last session: 2026-04-27T01:51:57Z
+Stopped at: Completed Quick 260427-eyf — installer/build-installer.ps1 + ASLT-Setup-v1.0.1.exe (98.17 MB)
 Resume file: None
