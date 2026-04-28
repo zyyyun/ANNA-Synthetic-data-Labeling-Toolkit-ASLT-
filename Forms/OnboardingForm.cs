@@ -27,7 +27,6 @@ namespace ASLTv1.Forms
              "비디오 화면에서 마우스를 드래그해 객체 영역을 지정하세요.\n\n" +
              "Ctrl+1 ~ Ctrl+0 : 객체 ID 부여 (1~10)\n" +
              "Alt+1 ~ Alt+0  : Person 확장 ID (11~20)\n" +
-             "Tab 키          : 현재 프레임 BBOX 순차 선택\n" +
              "Ctrl+Z / Ctrl+Y : 실행 취소 / 다시 실행"),
             ("3. Entry/Exit 설정",
              "추적을 시작할 프레임에서 Entry 버튼(또는 E 키),\n" +
