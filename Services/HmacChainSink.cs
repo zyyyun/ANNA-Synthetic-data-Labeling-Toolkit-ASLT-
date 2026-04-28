@@ -13,7 +13,7 @@ namespace ASLTv1.Services
     /// D-17b: Serilog ILogEventSink 구현 — 각 로그 라인에 `|prev_hmac=...|hmac=...` 부착.
     /// HMAC-SHA256 기반 체인으로 로그 변조를 검출할 수 있다.
     ///
-    /// - 파일 경로 포맷: {baseDir}\AOLT-{yyyy-MM-dd}.log (Serilog RollingInterval.Day 호환)
+    /// - 파일 경로 포맷: {baseDir}\ASLT-{yyyy-MM-dd}.log (Serilog RollingInterval.Day 호환)
     /// - 첫 라인 prev_hmac: "GENESIS" (파일 부재 시)
     /// - 일자 경계 (rollover): **프로세스 내에서 발생하는 rollover 는 in-memory 의 _lastHmac 을 유지**
     ///   새 파일의 첫 라인이 어제의 마지막 hmac 를 prev 로 참조하여 cross-day chain continuity 유지.
@@ -26,7 +26,7 @@ namespace ASLTv1.Services
         private const string HMAC_MARKER = "|hmac=";
 
         private readonly string _logDir;
-        private readonly string _baseName;   // e.g. "AOLT-"
+        private readonly string _baseName;   // e.g. "ASLT-"
         private readonly string _ext;        // e.g. ".log"
         private readonly ITextFormatter _formatter;
         private readonly byte[] _key;
@@ -41,7 +41,7 @@ namespace ASLTv1.Services
             _key = key ?? throw new ArgumentNullException(nameof(key));
 
             _logDir = Path.GetDirectoryName(pathTemplate) ?? ".";
-            _baseName = Path.GetFileNameWithoutExtension(pathTemplate);  // "AOLT-"
+            _baseName = Path.GetFileNameWithoutExtension(pathTemplate);  // "ASLT-"
             _ext = Path.GetExtension(pathTemplate);                       // ".log"
 
             Directory.CreateDirectory(_logDir);
@@ -154,7 +154,7 @@ namespace ASLTv1.Services
         }
 
         /// <summary>
-        /// 로그 디렉터리에서 "AOLT-*.log" 파일 중 가장 최근(파일명의 날짜 기준) 파일의 마지막 hmac 를 읽는다.
+        /// 로그 디렉터리에서 "ASLT-*.log" 파일 중 가장 최근(파일명의 날짜 기준) 파일의 마지막 hmac 를 읽는다.
         /// cross-day 체인 복구에 사용.
         /// </summary>
         private string? TryReadLastHmacOfMostRecentPriorFile()

@@ -90,7 +90,7 @@ namespace ASLTv1.Forms
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.ShowInTaskbar = false;
-            this.Text = "AOLT 시작 가이드";
+            this.Text = "ASLT 시작 가이드";
             this.AcceptButton = this.btnNext;
             this.ResumeLayout(false);
         }

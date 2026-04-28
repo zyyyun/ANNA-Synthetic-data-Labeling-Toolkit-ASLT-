@@ -24,6 +24,10 @@ namespace ASLTv1.Services
         private bool isPlaying;
         private double playbackSpeed = 1.0;
 
+        // DF-1-21: 일부 AVI 코덱은 Set(PosFrames, ...) seek 가 작동하지 않거나 후속 Read 가 empty 반환.
+        // VideoCapture 가 새로 열린 직후엔 자연 위치 0 이므로 seek 없이 Read 가능 — 첫 frame 호출에서 seek 생략.
+        private bool _isFreshlyOpened;
+
         // Playback timing
         private long lastFrameTime;
         private double msPerFrame;
@@ -147,6 +151,7 @@ namespace ASLTv1.Services
             totalFrames = (int)videoCapture.Get(VideoCaptureProperties.FrameCount);
             fps = videoCapture.Get(VideoCaptureProperties.Fps);
             currentFrameIndex = 0;
+            _isFreshlyOpened = true;  // DF-1-21: 다음 LoadFrame 호출에서 seek 생략 가능 표시
 
             // RELI-06 (05.5-02): 첫 프레임 로드는 MainForm.LoadVideoWithSubtitle 에서 수행.
             // 여기서 호출하면 동일한 cold-decoder seek 가 두 번 발생하여 ~1fps 지연의 원인이 됨.
@@ -203,11 +208,32 @@ namespace ASLTv1.Services
                 if (frameIndex < 0 || frameIndex >= totalFrames)
                     return null;
 
-                videoCapture.Set(VideoCaptureProperties.PosFrames, frameIndex);
+                // DF-1-21: AVI 호환성 — seek 생략 조건
+                //  (1) 새로 열린 VideoCapture 의 첫 Read (자연 위치 0)
+                //  (2) sequential next frame (재생 중 timer tick — currentFrameIndex+1)
+                // 일부 AVI 코덱은 Set(PosFrames) seek 후 Read 가 empty 를 반환하거나 seek 자체가 무시됨.
+                // sequential read 는 모든 코덱에서 안전하게 동작.
+                bool skipSeek = (_isFreshlyOpened && frameIndex == 0)
+                                || (frameIndex == currentFrameIndex + 1);
+                if (!skipSeek)
+                {
+                    videoCapture.Set(VideoCaptureProperties.PosFrames, frameIndex);
+                }
 
                 currentFrame?.Dispose();
                 currentFrame = new Mat();
                 videoCapture.Read(currentFrame);
+
+                // 일부 코덱은 첫 Read 후에도 empty Mat — 후속 Read 호출에서 디코더 버퍼가 채워짐.
+                int retryCount = 0;
+                while (currentFrame.Empty() && retryCount < 3)
+                {
+                    videoCapture.Read(currentFrame);
+                    retryCount++;
+                }
+
+                // 첫 read 가 성공/실패 여부와 무관하게 freshly-opened 표시는 해제 (seek 경로로 진입)
+                _isFreshlyOpened = false;
 
                 Bitmap? bitmap = null;
                 if (!currentFrame.Empty())

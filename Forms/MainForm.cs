@@ -276,6 +276,20 @@ namespace ASLTv1.Forms
             }
         }
 
+        private void btnShowGuide_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 수동 진입 — "다시 보지 않기" 체크박스 숨김 (영구 비표시는 첫 실행 자동 표시 경로 전용).
+                using (var onboard = new OnboardingForm(showDoNotShowAgain: false))
+                    onboard.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[가이드 표시 실패] 사용자 트리거");
+            }
+        }
+
         #endregion
 
         #region Video Loading
@@ -451,6 +465,21 @@ namespace ASLTv1.Forms
                 {
                     labelLoading.Visible = false;
                     panelVideoControls.Enabled = true;
+
+                    // DF-1-21: paint handshake 안전망 — 첫 영상 로드 시 paint 이벤트가 timing/layout 이슈로
+                    // _isVideoReady 전이를 트리거하지 못하면 모든 재생 가드(timer tick, rewind/forward 등)가
+                    // silent return 되어 사용자 입력 자체가 무시되는 증상이 보고됨.
+                    // 로드가 finally 까지 도달했다는 것은 LoadFrame(0) 동기 완료 후이므로 cold-decoder 보호는
+                    // 이미 종료된 시점 — 강제 전이가 안전하며 RELI-06 의 의도(cold seek 폭주 차단)와 충돌하지 않음.
+                    if (!_isVideoReady && _videoService.IsVideoLoaded && pictureBoxVideo.Image != null)
+                    {
+                        _isVideoReady = true;
+                        if (_pendingAutoPlay && !isPlaying)
+                        {
+                            _pendingAutoPlay = false;
+                            btnPlay_Click(null, EventArgs.Empty);
+                        }
+                    }
                 }
             }
         }
@@ -1521,11 +1550,15 @@ namespace ASLTv1.Forms
                     b.FrameIndex >= waypoint.EntryFrame &&
                     b.FrameIndex <= waypoint.ExitFrame).ToList();
 
-                foreach (var box in boxesToDelete)
+                // DF-1-19: Waypoint 삭제 atomic Undo — 박스 + Waypoint 단일 composite 액션으로 묶어 Ctrl+Z 한 번에 전체 복원.
+                AddUndoAction(new UndoAction
                 {
-                    AddUndoAction(new UndoAction { Type = UndoActionType.RemoveBox, Box = CloneBoundingBox(box) });
-                    boundingBoxes.Remove(box);
-                }
+                    Type = UndoActionType.RemoveWaypointWithBoxes,
+                    AffectedBoxes = boxesToDelete.Select(CloneBoundingBox).ToList(),
+                    AffectedWaypoint = waypoint,
+                });
+
+                foreach (var box in boxesToDelete) boundingBoxes.Remove(box);
 
                 if (selectedBox != null && boxesToDelete.Contains(selectedBox)) selectedBox = null;
                 if (selectedWaypoint == waypoint) selectedWaypoint = null;
@@ -2489,6 +2522,15 @@ namespace ASLTv1.Forms
                     var boxToModify = boundingBoxes.FirstOrDefault(b => b.FrameIndex == action.Box.FrameIndex && GetBoxId(b) == GetBoxId(action.Box) && b.Label == action.Box.Label);
                     if (boxToModify != null) { boxToModify.Rectangle = action.OriginalRectangle; boxToModify.Label = action.OriginalLabel; SetBoxId(boxToModify, action.OriginalLabel, action.OriginalObjectId); InvalidateBoxCache(); }
                     break;
+                case UndoActionType.RemoveWaypointWithBoxes:
+                    if (action.AffectedBoxes != null)
+                        foreach (var b in action.AffectedBoxes) boundingBoxes.Add(b);
+                    if (action.AffectedWaypoint != null && !waypointMarkers.Contains(action.AffectedWaypoint))
+                        waypointMarkers.Add(action.AffectedWaypoint);
+                    InvalidateBoxCache();
+                    UpdateWaypointListView();
+                    panelTimeline.Invalidate();
+                    break;
             }
             redoStack.Push(action);
             UpdateBoxCount(); UpdateBboxListDisplay(); pictureBoxVideo.Invalidate();
@@ -2521,6 +2563,18 @@ namespace ASLTv1.Forms
                 case UndoActionType.ModifyBox:
                     var boxToModify = boundingBoxes.FirstOrDefault(b => b.FrameIndex == action.Box.FrameIndex && GetBoxId(b) == action.OriginalObjectId && b.Label == action.OriginalLabel);
                     if (boxToModify != null) { boxToModify.Rectangle = action.Box.Rectangle; boxToModify.Label = action.Box.Label; SetBoxId(boxToModify, action.Box.Label, GetBoxId(action.Box)); InvalidateBoxCache(); }
+                    break;
+                case UndoActionType.RemoveWaypointWithBoxes:
+                    if (action.AffectedBoxes != null)
+                        foreach (var b in action.AffectedBoxes)
+                        {
+                            var live = boundingBoxes.FirstOrDefault(x => ReferenceEquals(x, b));
+                            if (live != null) boundingBoxes.Remove(live);
+                        }
+                    if (action.AffectedWaypoint != null) waypointMarkers.Remove(action.AffectedWaypoint);
+                    InvalidateBoxCache();
+                    UpdateWaypointListView();
+                    panelTimeline.Invalidate();
                     break;
             }
             undoStack.Push(action);
@@ -3135,6 +3189,30 @@ namespace ASLTv1.Forms
 
             if (result == DialogResult.Yes)
             {
+                // DF-1-19: 직전에 push 된 RemoveBox 액션을 회수하여 composite 으로 교체.
+                // 단일 Ctrl+Z 로 박스 + Waypoint 동시 복원, 더블-restore 방지.
+                var capturedBoxes = new List<BoundingBox>();
+                if (undoStack.Count > 0)
+                {
+                    var top = undoStack.Peek();
+                    if (top.Type == UndoActionType.RemoveBox && top.Box != null
+                        && top.Box.FrameIndex == deletedBox.FrameIndex
+                        && top.Box.Label == deletedBox.Label
+                        && GetBoxId(top.Box) == GetBoxId(deletedBox))
+                    {
+                        var popped = undoStack.Pop();
+                        capturedBoxes.Add(popped.Box);
+                        // redoStack 정합성 — pop 한 액션이 다시 redo 되는 경로 차단
+                        redoStack.Clear();
+                    }
+                }
+                AddUndoAction(new UndoAction
+                {
+                    Type = UndoActionType.RemoveWaypointWithBoxes,
+                    AffectedBoxes = capturedBoxes,
+                    AffectedWaypoint = waypoint,
+                });
+
                 waypointMarkers.Remove(waypoint);
                 if (selectedWaypoint == waypoint) selectedWaypoint = null;
                 // DF-1-17 (D-17a): Waypoint 삭제 감사 이벤트 (BBOX 동반 삭제 프롬프트 Yes 경로)

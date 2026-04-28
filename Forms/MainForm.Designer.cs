@@ -27,6 +27,7 @@ namespace ASLTv1.Forms
             this.btnDeleteJson = new System.Windows.Forms.Button();
             this.labelBoxCount = new System.Windows.Forms.Label();
             this.labelCurrentJsonFile = new System.Windows.Forms.Label();
+            this.btnShowGuide = new System.Windows.Forms.Button();
             this.btnAbout = new System.Windows.Forms.Button();
             this.btnMinimize = new System.Windows.Forms.Button();
             this.btnMaximize = new System.Windows.Forms.Button();
@@ -102,6 +103,7 @@ namespace ASLTv1.Forms
             this.panelHeader.Controls.Add(this.btnDeleteJson);
             this.panelHeader.Controls.Add(this.labelBoxCount);
             this.panelHeader.Controls.Add(this.labelCurrentJsonFile);
+            this.panelHeader.Controls.Add(this.btnShowGuide);
             this.panelHeader.Controls.Add(this.btnAbout);
             this.panelHeader.Controls.Add(this.btnMinimize);
             this.panelHeader.Controls.Add(this.btnMaximize);
@@ -160,6 +162,18 @@ namespace ASLTv1.Forms
             this.labelCurrentJsonFile.ForeColor = System.Drawing.Color.FromArgb(157, 157, 157);
             this.labelCurrentJsonFile.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.labelCurrentJsonFile.AutoEllipsis = true;
+
+            // Show Guide Button
+            this.btnShowGuide.Text = "가이드 켜기";
+            this.btnShowGuide.Location = new System.Drawing.Point(1295, 8);
+            this.btnShowGuide.Size = new System.Drawing.Size(80, 35);
+            this.btnShowGuide.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnShowGuide.BackColor = System.Drawing.Color.FromArgb(62, 62, 66);
+            this.btnShowGuide.ForeColor = System.Drawing.Color.FromArgb(212, 212, 212);
+            this.btnShowGuide.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(63, 63, 70);
+            this.btnShowGuide.FlatAppearance.BorderSize = 1;
+            this.btnShowGuide.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.btnShowGuide.Click += new System.EventHandler(this.btnShowGuide_Click);
 
             // About Button (NEW)
             this.btnAbout.Text = "정보";
@@ -753,6 +767,7 @@ namespace ASLTv1.Forms
             this.toolTipMain.SetToolTip(this.btnSelectFolder, "영상 파일 선택 (비디오 열기)");
             this.toolTipMain.SetToolTip(this.btnExportJson, "JSON 저장 (Ctrl+S)");
             this.toolTipMain.SetToolTip(this.btnDeleteJson, "JSON 삭제");
+            this.toolTipMain.SetToolTip(this.btnShowGuide, "시작 가이드 다시 보기");
             this.toolTipMain.SetToolTip(this.btnAbout, "프로그램 정보 및 단축키");
             this.toolTipMain.SetToolTip(this.btnMinimize, "최소화");
             this.toolTipMain.SetToolTip(this.btnMaximize, "최대화/복원");
@@ -786,6 +801,7 @@ namespace ASLTv1.Forms
         private System.Windows.Forms.Button btnDeleteJson;
         private System.Windows.Forms.Label labelBoxCount;
         private System.Windows.Forms.Label labelCurrentJsonFile;
+        private System.Windows.Forms.Button btnShowGuide;
         private System.Windows.Forms.Button btnAbout;
         private System.Windows.Forms.Button btnMinimize;
         private System.Windows.Forms.Button btnMaximize;

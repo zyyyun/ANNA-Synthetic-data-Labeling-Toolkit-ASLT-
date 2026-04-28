@@ -1,10 +1,10 @@
-; ASLT - ANNA Synthetic data Labeling Toolkit v1.0.0 Installer
+; ASLT - ANNA Synthetic data Labeling Toolkit Installer
 ; Per Phase 5 CONTEXT.md decisions D-01..D-17
 ; Compile with: "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" ASLT-Setup.iss
 
 #define MyAppName "ANNA 합성데이터 라벨링 툴킷 (ASLT)"
 #define MyAppNameEn "ASLT - ANNA Synthetic data Labeling Toolkit"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.0.2"
 #define MyAppPublisher "ANNA"
 #define MyAppExeName "ASLTv1.exe"
 #define PublishDir "..\bin\Release\net8.0-windows\win-x64\publish"
@@ -23,7 +23,7 @@ VersionInfoCopyright=Copyright (C) ANNA 2026
 DefaultDirName={autopf}\ANNA\ASLT
 DefaultGroupName=ANNA\ASLT
 DisableProgramGroupPage=yes
-; D-17: Installer filename ASLT-Setup-v1.0.0.exe
+; D-17: Installer filename ASLT-Setup-v{version}.exe
 OutputBaseFilename=ASLT-Setup-v{#MyAppVersion}
 OutputDir=Output
 Compression=lzma2

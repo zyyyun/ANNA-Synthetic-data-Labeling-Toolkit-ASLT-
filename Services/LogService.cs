@@ -25,7 +25,7 @@ namespace ASLTv1.Services
 
         /// <summary>
         /// Serilog 로거를 초기화한다.
-        /// %LOCALAPPDATA%\ANNA\ASLT\logs 디렉터리에 날짜별 로그 파일(AOLT-yyyy-MM-dd.log)을 생성한다.
+        /// %LOCALAPPDATA%\ANNA\ASLT\logs 디렉터리에 날짜별 로그 파일(ASLT-yyyy-MM-dd.log)을 생성한다.
         /// 일반 사용자 권한으로 쓰기 가능한 표준 위치 — Program Files 설치 시에도 정상 동작.
         /// DF-1-17 (D-17b): 각 로그 라인에 HMAC-SHA256 기반 무결성 체인을 부착한다.
         /// DF-1-17 (D-17c): 30일 초과 로그 파일은 시작 시 자동 삭제된다.
@@ -36,7 +36,7 @@ namespace ASLTv1.Services
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "ANNA", "ASLT", "logs");
             Directory.CreateDirectory(logDir);
-            string pathTemplate = Path.Combine(logDir, "AOLT-.log");
+            string pathTemplate = Path.Combine(logDir, "ASLT-.log");
 
             // D-17b: HMAC 체인용 비밀키 확보 (머신 최초 실행 시 자동 생성)
             // NOTE: HmacKeyProvider 는 logger 초기화 전 호출되므로 내부에서 Log.* 을 사용하지 않는다.
@@ -70,7 +70,7 @@ namespace ASLTv1.Services
             try
             {
                 DateTime cutoff = DateTime.Now.AddDays(-retainDays);
-                foreach (var file in Directory.GetFiles(logDir, "AOLT-*.log"))
+                foreach (var file in Directory.GetFiles(logDir, "ASLT-*.log"))
                 {
                     try
                     {

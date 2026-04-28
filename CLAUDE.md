@@ -1,9 +1,9 @@
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**AOLT - ANNA Object Labeling Tool**
+**ASLT - ANNA Synthetic data Labeling Toolkit**
 
-AOLT는 영상 내 객체(사람, 차량, 이벤트)에 바운딩 박스를 그리고 COCO 형식 JSON으로 내보내는 Windows 데스크톱 라벨링 도구다. IFEZ 등 내부 연구원/엔지니어가 교통 영상 분석용 학습 데이터를 생성하는 데 사용한다.
+ASLT는 영상 내 객체(사람, 차량, 이벤트)에 바운딩 박스를 그리고 COCO 형식 JSON으로 내보내는 Windows 데스크톱 라벨링 도구다. IFEZ 등 내부 연구원/엔지니어가 교통 영상 분석용 학습 데이터를 생성하는 데 사용한다.
 
 **Core Value:** 모든 라벨링 기능이 GS인증 1등급 기준(ISO/IEC 25023 8대 품질 특성)을 충족하며 결함 없이 정확하게 동작해야 한다.
 

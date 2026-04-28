@@ -1,6 +1,6 @@
 namespace ASLTv1.Models
 {
-    public enum UndoActionType { AddBox, RemoveBox, ModifyBox }
+    public enum UndoActionType { AddBox, RemoveBox, ModifyBox, RemoveWaypointWithBoxes }
 
     public class UndoAction
     {
@@ -9,6 +9,10 @@ namespace ASLTv1.Models
         public Rectangle OriginalRectangle { get; set; }
         public string OriginalLabel { get; set; }
         public int OriginalObjectId { get; set; }
+
+        // RemoveWaypointWithBoxes: Waypoint + 그 구간 박스들의 atomic 삭제/복원.
+        public List<BoundingBox> AffectedBoxes { get; set; }
+        public WaypointMarker AffectedWaypoint { get; set; }
     }
 
     public enum ResizeHandle

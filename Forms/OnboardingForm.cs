@@ -38,10 +38,17 @@ namespace ASLTv1.Forms
              "Waypoint 목록은 우측 사이드바에서 확인/편집할 수 있습니다.")
         };
 
-        public OnboardingForm()
+        public OnboardingForm() : this(showDoNotShowAgain: true) { }
+
+        /// <param name="showDoNotShowAgain">
+        /// false 일 경우 "다시 보지 않기" 체크박스를 숨긴다 ("가이드 켜기" 버튼으로 수동 진입한 경로).
+        /// true(기본) 는 첫 실행 자동 표시 경로 — 사용자가 영구 비표시를 선택할 수 있어야 한다.
+        /// </param>
+        public OnboardingForm(bool showDoNotShowAgain)
         {
             InitializeComponent();
             DarkTheme.Apply(this);
+            chkDoNotShowAgain.Visible = showDoNotShowAgain;
             RenderStep();
         }
 
