@@ -32,7 +32,7 @@
 - [ ] Goal: DF-2-05, DF-2-06 두 결함을 정확히 재현 → 근본 원인 분석 → 수정 → 회귀 테스트 후 v1.0.3 인스톨러 빌드
 - [ ] Requirements: FUNC-11 (DF-2-05), FUNC-12 (DF-2-06)
 - [ ] Plans: 3 plans
-  - [ ] 07-01-PLAN.md — FUNC-11 (DF-2-05): SetMode 헬퍼 도입 + 모드 버튼 시각 동기화
+  - [x] 07-01-PLAN.md — FUNC-11 (DF-2-05): SetMode 헬퍼 도입 + 모드 버튼 시각 동기화 (completed 2026-05-06, commit 18f3126)
   - [ ] 07-02-PLAN.md — FUNC-12 (DF-2-06): btnExportJson_Click 1-BBOX 가드 추가
   - [ ] 07-03-PLAN.md — 회귀 테스트 + ASLT-Setup-v1.0.3.exe 빌드 + 1.0.2 → 1.0.3 in-place 업그레이드 검증
 - [ ] Success criteria:
@@ -56,5 +56,5 @@
 | Milestone | Phases | Status | Date |
 |-----------|--------|--------|------|
 | v1.0 GS인증 결함수정 | 1-5.6 (8 phases) | ✅ Shipped | 2026-04-28 |
-| v1.0.3 JSON 저장 결함수정 (KTC 2차) | Phase 7 | 🚧 Planning | 2026-05-06 |
+| v1.0.3 JSON 저장 결함수정 (KTC 2차) | Phase 7 (1/3 plans) | 🚧 Executing | 2026-05-06 |
 | (next) | 6, 8-10 (TBD) | 📋 Planned | - |

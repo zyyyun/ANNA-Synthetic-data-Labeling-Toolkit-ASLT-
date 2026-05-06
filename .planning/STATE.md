@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0.3
 milestone_name: JSON 저장 결함 수정 (KTC 2차)
-status: ready_to_execute
-last_updated: "2026-05-06T11:13:00.000Z"
+status: executing
+last_updated: "2026-05-06T02:30:35Z"
 last_activity: 2026-05-06
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 3
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 33
 ---
 
 # Project State
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-05-06)
 ## Current Position
 
 Phase: 7 — JSON 저장 결함수정 (KTC 2차)
-Plan: 3 plans created (07-01, 07-02, 07-03), all verified
-Status: Ready to execute
-Last activity: 2026-05-06 — Phase 7 plans verified, plan-checker PASSED 12/12 dimensions
+Plan: 07-01 (FUNC-11 SetMode helper) ✅ completed — next: 07-02 (FUNC-12 1-BBOX 가드)
+Status: Executing
+Last activity: 2026-05-06 — Plan 07-01 완료 (commit 18f3126)
 
 ## Accumulated Context
 
@@ -37,6 +37,8 @@ Last activity: 2026-05-06 — Phase 7 plans verified, plan-checker PASSED 12/12 
 
 v1.0.3 결정:
 - KTC 2차 결함보고서를 별도 milestone (v1.0.3 patch) 으로 처리 — Phase 5.6 (1차 결함수정) 패턴과 일관, 인증 감사 트레이스 유지
+- Plan 07-01: SetMode(DrawMode) 단일 헬퍼로 currentMode + 좌측 버튼 BackColor + 커서를 원자적으로 동기화. ARGB 인라인 상수는 헬퍼 인근의 private static readonly Color 필드로 캡슐화 (D-04 채택)
+- Plan 07-01: D1/D2 단축키와 currentMode 필드 기본값은 무수정 — btnSelectAll_Click/btnEdit_Click 위임 경로에 SetMode 가 자동 전파 (D-03 채택)
 
 ### Open Blockers
 
@@ -56,6 +58,6 @@ None — v1.0.3 milestone 시작 시점. Phase 정의 후 PLAN 에서 세부 작
 
 ## Session Continuity
 
-Last session: 2026-05-06T00:00:00Z
-Stopped at: v1.0.3 milestone 시작 — PROJECT.md/STATE.md 갱신, REQUIREMENTS/ROADMAP 정의 진행 중
+Last session: 2026-05-06T02:30:35Z
+Stopped at: Plan 07-01 (FUNC-11 SetMode 헬퍼) 완료 — 다음 dispatch: 07-02 (FUNC-12 1-BBOX 가드)
 Resume file: None
