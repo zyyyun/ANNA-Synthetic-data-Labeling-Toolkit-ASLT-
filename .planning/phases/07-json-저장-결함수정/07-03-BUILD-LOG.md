@@ -34,16 +34,35 @@
 
 ## 3. 빌드 산출물
 
+본 plan 은 두 차례 빌드되었음:
+
+### 3.1 1차 빌드 (commit `ab8bb03`) — superseded
+
 | 항목 | 값 |
 |---|---|
-| Path | `C:\Users\ANNA\AOLTv1.0\installer\Output\ASLT-Setup-v1.0.3.exe` |
-| 크기 | **98.18 MB** (102,952,293 bytes) |
-| 임계값 | ≥ 50 MB (sanity threshold) — **Pass** |
+| Path | `C:\Users\ANNA\AOLTv1.0\installer\Output\ASLT-Setup-v1.0.3.exe` (덮어쓰기됨) |
+| 크기 | 98.18 MB (102,952,293 bytes) |
 | Last Modified | 2026-05-06 13:03:14 |
 | Version (csproj) | 1.0.3 |
 | SHA256 | `08EABFD86E8410559818261491F4E4D3B720B40CCFFCC6CFC19DAA60176403D7` |
+| Status | **Superseded** — UAT 도중 사용자가 정보 팝업의 Entry/Exit 단축키 표기 누락 (Shift 변형) 을 발견. 소스 패치(commit `8a22445`) 후 재빌드 필요. |
 
-비교: 1.0.2 인스톨러 = 98.19 MB → 1.0.3 = 98.18 MB (델타 -0.01 MB, 코드 변경 minimal — SetMode 헬퍼 + 1-BBOX 가드만 추가, 자원 추가 없음. 정상 범위).
+### 3.2 2차 빌드 (final, ships as v1.0.3) — current
+
+| 항목 | 값 |
+|---|---|
+| Path | `C:\Users\ANNA\AOLTv1.0\installer\Output\ASLT-Setup-v1.0.3.exe` |
+| 크기 | **98.18 MB** |
+| 임계값 | ≥ 50 MB (sanity threshold) — **Pass** |
+| Last Modified | 2026-05-06 15:19:02 |
+| Version (csproj) | 1.0.3 |
+| SHA256 | `FBA0B886A0F12A169263E369F91DC07E8B5DCBC4F927AAC24D8B8ED908983E75` |
+| Includes | commit `18f3126` (FUNC-11), `9eb6940` (FUNC-12), `8a22445` (popup E/Shift+E, X/Shift+X) |
+| ISCC compile | 50.250 sec |
+| Total build | 54.4s |
+| Status | **Current — UAT 대상** |
+
+비교: 1.0.2 인스톨러 = 98.19 MB → 1.0.3 = 98.18 MB (델타 -0.01 MB, 코드 변경 minimal — SetMode 헬퍼 + 1-BBOX 가드 + 팝업 텍스트 4자만 추가, 자원 추가 없음. 정상 범위).
 
 ## 4. ISCC 컴파일러 출력 핵심 라인 (인용)
 
