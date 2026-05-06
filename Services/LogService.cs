@@ -6,7 +6,7 @@ namespace ASLTv1.Services
     /// <summary>
     /// Serilog 기반 로그 서비스.
     /// 날짜별 파일 로테이션과 감사(Audit) 이벤트 기록을 제공한다.
-    /// DF-1-17 (D-17): HMAC 무결성 체인 + 30일 보존 + 9종 확장 감사 이벤트.
+    /// DF-1-17 (D-17): HMAC 무결성 체인 + 180일(6개월) 보존 + 9종 확장 감사 이벤트.
     /// </summary>
     public static class LogService
     {
@@ -17,7 +17,8 @@ namespace ASLTv1.Services
             "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
 
         /// <summary>D-17c: 로그 파일 보존 기간(일)</summary>
-        private const int RETAIN_DAYS = 30;
+        // 보존 기간: 180일 (6개월) — GS인증 감사 트레이스 확보 + 사용자 정책 (2026-05-06 v1.0.3 변경, 이전 30일)
+        private const int RETAIN_DAYS = 180;
 
         #endregion
 
@@ -28,7 +29,7 @@ namespace ASLTv1.Services
         /// %LOCALAPPDATA%\ANNA\ASLT\logs 디렉터리에 날짜별 로그 파일(ASLT-yyyy-MM-dd.log)을 생성한다.
         /// 일반 사용자 권한으로 쓰기 가능한 표준 위치 — Program Files 설치 시에도 정상 동작.
         /// DF-1-17 (D-17b): 각 로그 라인에 HMAC-SHA256 기반 무결성 체인을 부착한다.
-        /// DF-1-17 (D-17c): 30일 초과 로그 파일은 시작 시 자동 삭제된다.
+        /// DF-1-17 (D-17c): 180일(6개월) 초과 로그 파일은 시작 시 자동 삭제된다.
         /// </summary>
         public static void Initialize()
         {
@@ -51,7 +52,7 @@ namespace ASLTv1.Services
                 .WriteTo.Sink(new HmacChainSink(pathTemplate, fileFormatter, hmacKey))
                 .CreateLogger();
 
-            // D-17c: 30일 보존 정책 — 시작 시 오래된 파일 정리 (Serilog retainedFileCountLimit 대체)
+            // D-17c: 180일(6개월) 보존 정책 — 시작 시 오래된 파일 정리 (Serilog retainedFileCountLimit 대체)
             CleanupOldLogs(logDir, RETAIN_DAYS);
 
             // 키 생성 이벤트는 logger 가 완전히 준비된 후에만 기록 (advisor 가이드)
