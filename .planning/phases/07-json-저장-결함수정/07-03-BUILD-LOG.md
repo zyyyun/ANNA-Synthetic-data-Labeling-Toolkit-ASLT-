@@ -47,20 +47,46 @@
 | SHA256 | `08EABFD86E8410559818261491F4E4D3B720B40CCFFCC6CFC19DAA60176403D7` |
 | Status | **Superseded** — UAT 도중 사용자가 정보 팝업의 Entry/Exit 단축키 표기 누락 (Shift 변형) 을 발견. 소스 패치(commit `8a22445`) 후 재빌드 필요. |
 
-### 3.2 2차 빌드 (final, ships as v1.0.3) — current
+### 3.2 2차 빌드 (UAT 대상) — superseded
 
 | 항목 | 값 |
 |---|---|
-| Path | `C:\Users\ANNA\AOLTv1.0\installer\Output\ASLT-Setup-v1.0.3.exe` |
-| 크기 | **98.18 MB** |
-| 임계값 | ≥ 50 MB (sanity threshold) — **Pass** |
+| Path | `installer/Output/ASLT-Setup-v1.0.3.exe` (덮어쓰기됨) |
+| 크기 | 98.18 MB |
 | Last Modified | 2026-05-06 15:19:02 |
 | Version (csproj) | 1.0.3 |
 | SHA256 | `FBA0B886A0F12A169263E369F91DC07E8B5DCBC4F927AAC24D8B8ED908983E75` |
 | Includes | commit `18f3126` (FUNC-11), `9eb6940` (FUNC-12), `8a22445` (popup E/Shift+E, X/Shift+X) |
 | ISCC compile | 50.250 sec |
 | Total build | 54.4s |
-| Status | **Current — UAT 대상** |
+| Status | **Superseded** — UAT 마무리 직전 사용자가 로그 보존 정책 30일 → 180일 (6개월) 변경 요청. 소스 패치 commit `df890bd` 후 재빌드 필요. |
+| UAT result | 사용자 보고: 15/15 시나리오 모두 통과 (A-1..A-5, B-1..B-4, C-1, C-2, U-2..U-5). Audit log primary evidence 부재(§3.4 참조). |
+
+### 3.3 3차 빌드 (final, ships as v1.0.3) — current
+
+| 항목 | 값 |
+|---|---|
+| Path | `C:\Users\ANNA\AOLTv1.0\installer\Output\ASLT-Setup-v1.0.3.exe` |
+| 크기 | **98.19 MB** |
+| 임계값 | ≥ 50 MB (sanity threshold) — **Pass** |
+| Last Modified | 2026-05-06 17:02:03 |
+| Version (csproj) | 1.0.3 |
+| SHA256 | `9ECAF3C3018451976469C9CF1A142868AF800CBEB48AB6C9F80B386D093B4BC6` |
+| Includes | commit `18f3126` (FUNC-11), `9eb6940` (FUNC-12), `8a22445` (popup), `df890bd` (retention 30→180일) |
+| ISCC compile | 64.093 sec |
+| Total build | 70.2s |
+| Status | **Final** — Phase 7 ship target. 2차 빌드와 source-level diff: `Services/LogService.cs` 4개 위치 (XML doc + 상수 + inline comment) — 사용자 검증 측면에서 동작 동일 (180일 보존은 5/6개월 이후에야 효과 발현). |
+
+### 3.4 Audit log evidence — partial
+
+`%LOCALAPPDATA%\ANNA\ASLT\logs\ASLT-2026-05-06.log` 에 본 plan 시점 (~17:02) 까지 기록된 [AUDIT] 엔트리:
+
+```
+2026-05-06 15:51:20.900 [INF] [AUDIT] 애플리케이션 시작|prev_hmac=GENESIS|hmac=6601ff43...
+2026-05-06 15:51:26.646 [INF] [AUDIT] 애플리케이션 종료|prev_hmac=6601ff43...|hmac=9dc684d5...
+```
+
+총 2 라인. 사용자가 보고한 UAT 의 JSON 저장 활동 (B-2/B-3/C-1/U-5 정상 저장) 의 `[AUDIT] JSON 저장: ...` 엔트리가 본 로그 파일에 기록되지 않음. HMAC chain 자체는 GENESIS → 6601ff43 → 9dc684d5 정상 유효. 본 갭은 **Phase 7 의 결함 0건화 자체에는 영향 없음** (사용자 UAT 결과 + 코드 검증 + 빌드 검증이 primary evidence 로 유지) 이며, 다음 milestone 의 RELI 카테고리에 follow-up 항목으로 등록 예정 (07-03-SUMMARY.md 의 "Audit Trail Gap" 섹션 참조).
 
 비교: 1.0.2 인스톨러 = 98.19 MB → 1.0.3 = 98.18 MB (델타 -0.01 MB, 코드 변경 minimal — SetMode 헬퍼 + 1-BBOX 가드 + 팝업 텍스트 4자만 추가, 자원 추가 없음. 정상 범위).
 
