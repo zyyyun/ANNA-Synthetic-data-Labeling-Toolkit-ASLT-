@@ -175,6 +175,9 @@ namespace ASLTv1.Forms
             this.WindowState = FormWindowState.Maximized;
             DarkTheme.Apply(this);
 
+            // FUNC-11 (DF-2-05): 폼 최초 표시 시점에 좌측 모드 버튼 시각을 currentMode 기본값(Select) 과 동기화
+            SetMode(DrawMode.Select);
+
             btnSelectFolder.Text = "파일 선택";
 
             this.Focus();
@@ -668,11 +671,12 @@ namespace ASLTv1.Forms
                 labelCurrentJsonFile.Text = "";
 
                 // FUNC-09: 이전 작업 상태 완전 초기화
+                // FUNC-11 (DF-2-05): SetMode 헬퍼 호출로 currentMode + 좌측 버튼 시각 + Cursor 를 동시 동기화
                 undoStack.Clear();
                 redoStack.Clear();
                 entryFrameIndex = null;
                 exitFrameIndex = null;
-                currentMode = DrawMode.Select;
+                SetMode(DrawMode.Select);
                 currentAssignedId = 1;
                 isDrawing = false;
                 isDragging = false;
@@ -1579,20 +1583,38 @@ namespace ASLTv1.Forms
 
         #region Drawing/Painting
 
+        // FUNC-11 (DF-2-05): 모드 전환 시 currentMode + 좌측 버튼 BackColor + Cursor 를
+        // 한 곳에서 원자적으로 갱신하여 시각 동기화 결함 방지.
+        // (ARGB: 활성 = (59, 130, 246) — 파란색, 비활성 = (62, 62, 66) — 다크 톤)
+        private static readonly Color ModeButtonActiveColor   = Color.FromArgb(59, 130, 246);
+        private static readonly Color ModeButtonInactiveColor = Color.FromArgb(62, 62, 66);
+
+        private void SetMode(DrawMode mode)
+        {
+            currentMode = mode;
+
+            if (mode == DrawMode.Select)
+            {
+                btnSelectAll.BackColor = ModeButtonActiveColor;
+                btnEdit.BackColor      = ModeButtonInactiveColor;
+                pictureBoxVideo.Cursor = Cursors.Hand;
+            }
+            else // DrawMode.Draw
+            {
+                btnEdit.BackColor      = ModeButtonActiveColor;
+                btnSelectAll.BackColor = ModeButtonInactiveColor;
+                pictureBoxVideo.Cursor = Cursors.Cross;
+            }
+        }
+
         private void btnSelectAll_Click(object sender, EventArgs e)
         {
-            currentMode = DrawMode.Select;
-            btnSelectAll.BackColor = Color.FromArgb(59, 130, 246);
-            btnEdit.BackColor = Color.FromArgb(62, 62, 66);
-            pictureBoxVideo.Cursor = Cursors.Hand;
+            SetMode(DrawMode.Select);
         }
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            currentMode = DrawMode.Draw;
-            btnEdit.BackColor = Color.FromArgb(59, 130, 246);
-            btnSelectAll.BackColor = Color.FromArgb(62, 62, 66);
-            pictureBoxVideo.Cursor = Cursors.Cross;
+            SetMode(DrawMode.Draw);
         }
 
         private void pictureBoxVideo_Paint(object sender, PaintEventArgs e)
