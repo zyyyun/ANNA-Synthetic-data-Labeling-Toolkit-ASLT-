@@ -31,7 +31,10 @@
 **Phase 7: JSON 저장 결함수정 (KTC 2차)**
 - [ ] Goal: DF-2-05, DF-2-06 두 결함을 정확히 재현 → 근본 원인 분석 → 수정 → 회귀 테스트 후 v1.0.3 인스톨러 빌드
 - [ ] Requirements: FUNC-11 (DF-2-05), FUNC-12 (DF-2-06)
-- [ ] Plans (예상): 2 plans (각 결함별) + 1 plan (회귀 테스트 + 인스톨러 1.0.3 빌드)
+- [ ] Plans: 3 plans
+  - [ ] 07-01-PLAN.md — FUNC-11 (DF-2-05): SetMode 헬퍼 도입 + 모드 버튼 시각 동기화
+  - [ ] 07-02-PLAN.md — FUNC-12 (DF-2-06): btnExportJson_Click 1-BBOX 가드 추가
+  - [ ] 07-03-PLAN.md — 회귀 테스트 + ASLT-Setup-v1.0.3.exe 빌드 + 1.0.2 → 1.0.3 in-place 업그레이드 검증
 - [ ] Success criteria:
   1. FUNC-11 — JSON 저장 메뉴 호출 시 좌측 모드 버튼이 '전체선택' 활성 표시로 동기화 (편집모드 잔존 표시 0건)
   2. FUNC-12 — BBOX 1개 상태에서 JSON 저장 시 Entry==Exit Waypoint 생성 0건, 안내 메시지와 일관된 흐름
