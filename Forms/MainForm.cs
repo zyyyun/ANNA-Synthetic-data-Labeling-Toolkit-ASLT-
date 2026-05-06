@@ -771,6 +771,44 @@ namespace ASLTv1.Forms
                     }
                 }
 
+                // FUNC-12 (DF-2-06): BBOX 1개만 존재하는 객체가 Waypoint 없이 저장되는 경우
+                // — JsonService 가 Entry==Exit 인 Waypoint 를 생성하여 사용자 안내 메시지
+                //   ("Exit 는 Entry 이후 프레임에서 설정") 와 모순되는 흐름을 막는다.
+                //   해당 객체에 명시적 Waypoint 가 있으면 통과 (사용자 의도 존중).
+                var unfinishedTracks = boundingBoxes
+                    .Where(b => !b.IsDeleted)
+                    .GroupBy(b => new { b.Label, ObjectId = GetBoxId(b) })
+                    .Where(g =>
+                    {
+                        var sameObjectBoxes = g.ToList();
+                        if (sameObjectBoxes.Count != 1) return false;
+                        var only = sameObjectBoxes[0];
+                        bool hasMatchingWaypoint = waypointMarkers.Any(w =>
+                            w.Label == only.Label &&
+                            w.ObjectId == GetBoxId(only) &&
+                            only.FrameIndex >= w.EntryFrame &&
+                            only.FrameIndex <= w.ExitFrame);
+                        return !hasMatchingWaypoint;
+                    })
+                    .Select(g => new { g.Key.Label, g.Key.ObjectId })
+                    .ToList();
+
+                if (unfinishedTracks.Count > 0)
+                {
+                    string offending = string.Join(", ",
+                        unfinishedTracks.Select(t => $"[{t.Label}] [{t.ObjectId:D2}]"));
+                    MessageBox.Show(
+                        "Exit 는 Entry 이후 프레임에서 설정해주세요. " +
+                        "하나의 BBOX 만 존재하는 객체가 있어 Waypoint 를 생성할 수 없습니다.\n\n" +
+                        $"해당 객체: {offending}\n\n" +
+                        "해결 방법: 해당 객체의 다른 프레임에서 BBOX 를 추가하거나, " +
+                        "Entry/Exit 를 명시적으로 설정한 후 다시 저장해주세요.",
+                        "JSON 저장 차단",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
                 Form loadingForm = new Form
                 {
                     Width = 300, Height = 120, Text = "JSON 저장",
