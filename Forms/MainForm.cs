@@ -321,6 +321,12 @@ namespace ASLTv1.Forms
                         }
                         else if (result == DialogResult.Yes)
                         {
+                            // FUNC-12 (DF-2-06) 보강 (v1.0.3 5차): 영상 전환 시 자동 저장도 같은 가드 적용.
+                            // BBOX 1개 + Waypoint 없는 객체가 있으면 저장 차단 + 영상 전환 취소 (사용자가 라벨 수정 후 재시도).
+                            if (!TryGuardOneBoxSave())
+                            {
+                                return;
+                            }
                             SaveCurrentLabelingData();
                         }
                         else // DialogResult.No — DF-1-05 (D-09): 자동 저장된 JSON 롤백 삭제
@@ -775,37 +781,9 @@ namespace ASLTv1.Forms
                 // — JsonService 가 Entry==Exit 인 Waypoint 를 생성하여 사용자 안내 메시지
                 //   ("Exit 는 Entry 이후 프레임에서 설정") 와 모순되는 흐름을 막는다.
                 //   해당 객체에 명시적 Waypoint 가 있으면 통과 (사용자 의도 존중).
-                var unfinishedTracks = boundingBoxes
-                    .Where(b => !b.IsDeleted)
-                    .GroupBy(b => new { b.Label, ObjectId = GetBoxId(b) })
-                    .Where(g =>
-                    {
-                        var sameObjectBoxes = g.ToList();
-                        if (sameObjectBoxes.Count != 1) return false;
-                        var only = sameObjectBoxes[0];
-                        bool hasMatchingWaypoint = waypointMarkers.Any(w =>
-                            w.Label == only.Label &&
-                            w.ObjectId == GetBoxId(only) &&
-                            only.FrameIndex >= w.EntryFrame &&
-                            only.FrameIndex <= w.ExitFrame);
-                        return !hasMatchingWaypoint;
-                    })
-                    .Select(g => new { g.Key.Label, g.Key.ObjectId })
-                    .ToList();
-
-                if (unfinishedTracks.Count > 0)
+                //   v1.0.3 5차 빌드 보강: TryGuardOneBoxSave 헬퍼로 추출하여 영상 전환/폼 종료 자동 저장 path 와 공유.
+                if (!TryGuardOneBoxSave())
                 {
-                    string offending = string.Join(", ",
-                        unfinishedTracks.Select(t => $"[{t.Label}] [{t.ObjectId:D2}]"));
-                    MessageBox.Show(
-                        "Exit 는 Entry 이후 프레임에서 설정해주세요. " +
-                        "하나의 BBOX 만 존재하는 객체가 있어 Waypoint 를 생성할 수 없습니다.\n\n" +
-                        $"해당 객체: {offending}\n\n" +
-                        "해결 방법: 해당 객체의 다른 프레임에서 BBOX 를 추가하거나, " +
-                        "Entry/Exit 를 명시적으로 설정한 후 다시 저장해주세요.",
-                        "JSON 저장 차단",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -909,6 +887,52 @@ namespace ASLTv1.Forms
             _isDirty = false;
             // DF-1-05 (D-09): 저장 성공 경로 기록 — 영상 전환/앱 종료 시 '아니요' 선택하면 롤백 삭제 대상
             _autoSavedJsonPath = savePath;
+        }
+
+        /// <summary>
+        /// FUNC-12 (DF-2-06) 보강: BBOX 1개만 존재하는 객체가 명시적 Waypoint 없이 저장되어
+        /// JsonService 가 Entry==Exit 인 Waypoint 를 생성하는 결함을 차단하는 가드.
+        /// btnExportJson_Click (메뉴/버튼), 영상 전환 시 자동 저장, OnFormClosing 자동 저장 — 모든
+        /// SaveCurrentLabelingData 진입점에서 동일한 검증으로 사용. 호출자에게 안내 메시지가
+        /// 표시되었음을 bool 반환값으로 알려 적절한 후속 처리(저장 취소, 폼 닫기 취소 등) 가능.
+        /// </summary>
+        /// <returns>true = 저장 진행 가능, false = 저장 차단됨 (사용자에게 안내 메시지 이미 표시)</returns>
+        private bool TryGuardOneBoxSave()
+        {
+            var unfinishedTracks = boundingBoxes
+                .Where(b => !b.IsDeleted)
+                .GroupBy(b => new { b.Label, ObjectId = GetBoxId(b) })
+                .Where(g =>
+                {
+                    var sameObjectBoxes = g.ToList();
+                    if (sameObjectBoxes.Count != 1) return false;
+                    var only = sameObjectBoxes[0];
+                    bool hasMatchingWaypoint = waypointMarkers.Any(w =>
+                        w.Label == only.Label &&
+                        w.ObjectId == GetBoxId(only) &&
+                        only.FrameIndex >= w.EntryFrame &&
+                        only.FrameIndex <= w.ExitFrame);
+                    return !hasMatchingWaypoint;
+                })
+                .Select(g => new { g.Key.Label, g.Key.ObjectId })
+                .ToList();
+
+            if (unfinishedTracks.Count > 0)
+            {
+                string offending = string.Join(", ",
+                    unfinishedTracks.Select(t => $"[{t.Label}] [{t.ObjectId:D2}]"));
+                MessageBox.Show(
+                    "Exit 는 Entry 이후 프레임에서 설정해주세요. " +
+                    "하나의 BBOX 만 존재하는 객체가 있어 Waypoint 를 생성할 수 없습니다.\n\n" +
+                    $"해당 객체: {offending}\n\n" +
+                    "해결 방법: 해당 객체의 다른 프레임에서 BBOX 를 추가하거나, " +
+                    "Entry/Exit 를 명시적으로 설정한 후 다시 저장해주세요.",
+                    "JSON 저장 차단",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return false;
+            }
+            return true;
         }
 
         private void btnDeleteJson_Click(object sender, EventArgs e)
@@ -3648,6 +3672,13 @@ namespace ASLTv1.Forms
                 }
                 else if (result == DialogResult.Yes)
                 {
+                    // FUNC-12 (DF-2-06) 보강 (v1.0.3 5차): 폼 종료 시 자동 저장도 같은 가드 적용.
+                    // BBOX 1개 + Waypoint 없는 객체가 있으면 저장 차단 + 폼 종료 취소 (사용자가 라벨 수정 후 재시도).
+                    if (!TryGuardOneBoxSave())
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
                     SaveCurrentLabelingData();
                 }
                 else // DialogResult.No — DF-1-05 (D-09): 앱 종료 시에도 자동 저장 JSON 롤백 삭제 (비디오 전환과 동일 UX)
