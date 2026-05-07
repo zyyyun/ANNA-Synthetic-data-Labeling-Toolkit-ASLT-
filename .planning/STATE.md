@@ -4,8 +4,8 @@ milestone: v1.0.3
 milestone_name: JSON 저장 결함 수정 (KTC 2차)
 status: shipped
 shipped_at: 2026-05-06
-last_updated: "2026-05-06T08:30:00Z"
-last_activity: 2026-05-06
+last_updated: "2026-05-07T01:42:00Z"
+last_activity: 2026-05-07
 progress:
   total_phases: 1
   completed_phases: 1
@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-05-06)
 
 마일스톤 종료. 다음 사이클 시작 전 idle 상태.
 
-- Final build: ASLT-Setup-v1.0.3.exe (98.19 MB, SHA256 `9ECAF3C3018451976469C9CF1A142868AF800CBEB48AB6C9F80B386D093B4BC6`)
-- Tag: v1.0.3
-- Coverage: KTC 2차 결함 2건 (DF-2-05, DF-2-06) 0건화 + UAT 15/15 시나리오 통과
+- Final build: ASLT-Setup-v1.0.3.exe (98.19 MB, 4차 빌드 final, SHA256 `2072B5B54AA1417DAFBD91219DFF3B8A7923B67987D1E51559DF06CB66E61698`)
+- Tag: v1.0.3 (re-tagged 2026-05-07 after OnboardingForm Shift 변형 일관성 patch — `f719195`)
+- Coverage: KTC 2차 결함 2건 (DF-2-05, DF-2-06) 0건화 + UAT 15/15 시나리오 통과 + closeout 직후 OnboardingForm 일관성 fix 통합
 
 상세: [MILESTONES.md](MILESTONES.md), [milestones/v1.0.3-ROADMAP.md](milestones/v1.0.3-ROADMAP.md), [milestones/v1.0.3-REQUIREMENTS.md](milestones/v1.0.3-REQUIREMENTS.md)
 
@@ -61,6 +61,6 @@ None — milestone 종료. 다음 milestone 의 fresh requirements 는 `/gsd:new
 
 ## Session Continuity
 
-Last session: 2026-05-06T08:30:00Z
-Stopped at: v1.0.3 milestone close — archives created (v1.0.3-ROADMAP/REQUIREMENTS), ROADMAP/PROJECT/MILESTONES 갱신, ASLT-Setup-v1.0.3.exe shipped, git tag v1.0.3 대기
+Last session: 2026-05-07T01:42:00Z
+Stopped at: v1.0.3 milestone close + 4차 빌드 cycle (closeout 직후 OnboardingForm Shift 변형 일관성 fix 통합). archives 갱신 완료, ASLT-Setup-v1.0.3.exe (4차 final) shipped, git tag v1.0.3 재생성 완료
 Resume file: None

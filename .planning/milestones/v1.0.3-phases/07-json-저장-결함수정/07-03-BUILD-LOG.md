@@ -60,24 +60,38 @@
 | ISCC compile | 50.250 sec |
 | Total build | 54.4s |
 | Status | **Superseded** — UAT 마무리 직전 사용자가 로그 보존 정책 30일 → 180일 (6개월) 변경 요청. 소스 패치 commit `df890bd` 후 재빌드 필요. |
-| UAT result | 사용자 보고: 15/15 시나리오 모두 통과 (A-1..A-5, B-1..B-4, C-1, C-2, U-2..U-5). Audit log primary evidence 부재(§3.4 참조). |
+| UAT result | 사용자 보고: 15/15 시나리오 모두 통과 (A-1..A-5, B-1..B-4, C-1, C-2, U-2..U-5). Audit log primary evidence 부재(§3.5 참조). |
 
-### 3.3 3차 빌드 (final, ships as v1.0.3) — current
+### 3.3 3차 빌드 — superseded
 
 | 항목 | 값 |
 |---|---|
-| Path | `C:\Users\ANNA\AOLTv1.0\installer\Output\ASLT-Setup-v1.0.3.exe` |
-| 크기 | **98.19 MB** |
-| 임계값 | ≥ 50 MB (sanity threshold) — **Pass** |
+| Path | `installer/Output/ASLT-Setup-v1.0.3.exe` (덮어쓰기됨) |
+| 크기 | 98.19 MB |
 | Last Modified | 2026-05-06 17:02:03 |
 | Version (csproj) | 1.0.3 |
 | SHA256 | `9ECAF3C3018451976469C9CF1A142868AF800CBEB48AB6C9F80B386D093B4BC6` |
 | Includes | commit `18f3126` (FUNC-11), `9eb6940` (FUNC-12), `8a22445` (popup), `df890bd` (retention 30→180일) |
 | ISCC compile | 64.093 sec |
 | Total build | 70.2s |
-| Status | **Final** — Phase 7 ship target. 2차 빌드와 source-level diff: `Services/LogService.cs` 4개 위치 (XML doc + 상수 + inline comment) — 사용자 검증 측면에서 동작 동일 (180일 보존은 5/6개월 이후에야 효과 발현). |
+| Status | **Superseded** — milestone closeout 직후 사용자가 시작 가이드(`OnboardingForm`) 의 Entry/Exit 단축키 표기에서 Shift 변형 누락 발견. v1.0.3 tag 가 미배포 상태였으므로 v1.0.3 re-open cycle 진입 (소스 패치 commit `f719195`, tag 재생성). |
 
-### 3.4 Audit log evidence — partial
+### 3.4 4차 빌드 (final, ships as v1.0.3) — current
+
+| 항목 | 값 |
+|---|---|
+| Path | `C:\Users\ANNA\AOLTv1.0\installer\Output\ASLT-Setup-v1.0.3.exe` |
+| 크기 | **98.19 MB** |
+| 임계값 | ≥ 50 MB (sanity threshold) — **Pass** |
+| Last Modified | 2026-05-07 10:38:46 |
+| Version (csproj) | 1.0.3 |
+| SHA256 | `2072B5B54AA1417DAFBD91219DFF3B8A7923B67987D1E51559DF06CB66E61698` |
+| Includes | commit `18f3126` (FUNC-11), `9eb6940` (FUNC-12), `8a22445` (popup), `df890bd` (retention), `f719195` (시작 가이드 Shift 변형) |
+| ISCC compile | 61.0 sec |
+| Total build | 65.4s |
+| Status | **Final** — Phase 7 ship target. 3차 빌드와 source-level diff: `Forms/OnboardingForm.cs:32-33` 2자리 (Entry/Exit 카드 텍스트 — popup fix `8a22445` 와 일관성 패턴). 사용자 검증 측면에서 동작 동일. |
+
+### 3.5 Audit log evidence — partial
 
 `%LOCALAPPDATA%\ANNA\ASLT\logs\ASLT-2026-05-06.log` 에 본 plan 시점 (~17:02) 까지 기록된 [AUDIT] 엔트리:
 

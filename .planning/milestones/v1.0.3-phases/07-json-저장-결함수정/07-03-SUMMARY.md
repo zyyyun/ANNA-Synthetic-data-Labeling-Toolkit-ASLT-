@@ -13,9 +13,9 @@ requires:
   - phase: 5.6-결함수정 (v1.0)
     provides: "DF-1-04 0-BBOX 가드 패턴 — 본 plan 의 회귀 베이스라인"
 provides:
-  - "ASLT-Setup-v1.0.3.exe (98.19 MB, SHA256 9ECAF3C3...) — production-ready 인스톨러"
+  - "ASLT-Setup-v1.0.3.exe (98.19 MB, 4차 final SHA256 2072B5B5...) — production-ready 인스톨러"
   - "Phase 7 회귀 + 업그레이드 UAT 결과 (15/15 시나리오 pass) — 인증 감사 트레이스"
-  - "07-03-BUILD-LOG.md — 1차/2차/3차 빌드 이벤트 + audit log gap 포렌식"
+  - "07-03-BUILD-LOG.md — 1차/2차/3차/4차 빌드 이벤트 + audit log gap 포렌식"
   - "RELI-NEW-01 follow-up 항목 — 다음 milestone 으로 이월 (audit log primary evidence gap)"
 affects: [next-milestone-RELI-NEW-01, milestone-v1.0.3-closeout]
 
@@ -55,7 +55,7 @@ completed: 2026-05-06
 
 # Phase 7 Plan 3: 회귀 UAT + ASLT-Setup-v1.0.3.exe 빌드 + in-place 업그레이드 검증 Summary
 
-**Phase 7 클로즈아웃 — KTC 2차 결함 2건 (DF-2-05 / DF-2-06) 0건화 확인 + v1.0.3 인스톨러 (98.19 MB, SHA256 9ECAF3C3...) production-ready. 사용자 UAT 15/15 시나리오 pass. Audit log primary evidence gap 은 RELI-NEW-01 follow-up 으로 다음 milestone 이월.**
+**Phase 7 클로즈아웃 — KTC 2차 결함 2건 (DF-2-05 / DF-2-06) 0건화 확인 + v1.0.3 인스톨러 (98.19 MB, 4차 final SHA256 `2072B5B5...`) production-ready. 사용자 UAT 15/15 시나리오 pass. Audit log primary evidence gap 은 RELI-NEW-01 follow-up 으로 다음 milestone 이월. 4차 빌드는 closeout 직후 OnboardingForm Shift 변형 일관성 patch (commit `f719195`) 통합용 — v1.0.3 tag 미배포 상태에서 re-open cycle.**
 
 ## Performance
 
@@ -87,12 +87,13 @@ Phase 7 의 **결함 수정** 단계 (07-01 / 07-02) 가 완료된 시점에서 
 |---|--------|--------|---------------|------|
 | 1차 | `ab8bb03` | `08EABFD8...` | 18f3126 (FUNC-11) + 9eb6940 (FUNC-12) | superseded — UAT 도중 popup Shift 변형 표기 누락 발견 |
 | 2차 | `6d29324` | `FBA0B886...` | 위 + `8a22445` (popup) | superseded — UAT 마무리 직전 사용자가 로그 보존 30→180일 요청 |
-| **3차 (final)** | `0724248` | **`9ECAF3C3018451976469C9CF1A142868AF800CBEB48AB6C9F80B386D093B4BC6`** | 위 + `df890bd` (retention 180일) | **ships as v1.0.3** |
+| 3차 | `0724248` | `9ECAF3C3...` | 위 + `df890bd` (retention 180일) | superseded — milestone closeout 직후 OnboardingForm Shift 변형 누락 발견 |
+| **4차 (final)** | `f719195` | **`2072B5B54AA1417DAFBD91219DFF3B8A7923B67987D1E51559DF06CB66E61698`** | 위 + `f719195` (시작 가이드 OnboardingForm Shift 변형) | **ships as v1.0.3** — v1.0.3 re-open + 4차 빌드 cycle |
 
-3차 빌드 metadata:
+4차 빌드 metadata (final, ships v1.0.3):
 - **Path:** `C:\Users\ANNA\AOLTv1.0\installer\Output\ASLT-Setup-v1.0.3.exe`
 - **Size:** 98.19 MB
-- **LastWriteTime:** 2026-05-06 17:02:03
+- **LastWriteTime:** 2026-05-07 10:38:46
 - **Version (csproj):** 1.0.3
 - **ISCC compile:** 64.093 sec
 - **Total build:** 70.2s
@@ -159,7 +160,7 @@ Phase 7 의 **결함 수정** 단계 (07-01 / 07-02) 가 완료된 시점에서 
 | **1** | **FUNC-11 — JSON 저장 시 좌측 모드 버튼이 '전체선택' 활성 표시로 동기화 (편집모드 잔존 표시 0건)** | ✅ Phase 7-01 (commit `18f3126`, SetMode 헬퍼 4-call-site 통일) + UAT A-3 (핵심 시나리오) + A-5 |
 | **2** | **FUNC-12 — BBOX 1개 상태에서 JSON 저장 시 Entry==Exit Waypoint 생성 0건 + 안내 메시지 일관 흐름** | ✅ Phase 7-02 (commit `9eb6940`, btnExportJson_Click 가드) + UAT B-1 (핵심 시나리오) |
 | **3** | **회귀 — v1.0.2 통과 시나리오 (타임스탬프, 카테고리 매핑, BBOX ≥ 2 정상 케이스) 미회귀** | ✅ UAT B-2 + B-3 + B-4 + C-1 + C-2 |
-| **4** | **v1.0.3 인스톨러 빌드 성공 + 1.0.2 → 1.0.3 in-place 업그레이드 검증 통과** | ✅ Task 1 (3차 빌드 LASTEXITCODE 0, SHA256 9ECAF3C3...) + UAT U-2 + U-3 + U-4 + U-5 |
+| **4** | **v1.0.3 인스톨러 빌드 성공 + 1.0.2 → 1.0.3 in-place 업그레이드 검증 통과** | ✅ Task 1 (4차 final 빌드 LASTEXITCODE 0, SHA256 `2072B5B5...`) + UAT U-2 + U-3 + U-4 + U-5. (UAT 는 2차 빌드 기준 수행 — 4차 빌드는 OnboardingForm 텍스트 일관성 patch 만 추가, 동작 동일.) |
 
 ## Build Log Excerpt (3차 final)
 
@@ -337,7 +338,7 @@ REQUIREMENTS.md 의 acceptance criteria 모두 본 plan UAT 로 최종 입증:
 ### 본 plan 처리 완료 항목
 
 - Phase 7 의 모든 plan (07-01, 07-02, 07-03) 완료
-- v1.0.3 인스톨러 production-ready (`installer/Output/ASLT-Setup-v1.0.3.exe`, SHA256 9ECAF3C3...)
+- v1.0.3 인스톨러 production-ready (`installer/Output/ASLT-Setup-v1.0.3.exe`, 4차 final SHA256 `2072B5B5...` — 3차 SHA256 `9ECAF3C3...` 은 closeout 직후 OnboardingForm Shift 일관성 patch 로 superseded)
 - 사용자 UAT 15/15 통과 보고 완료
 - KTC 2차 결함 2건 (DF-2-05 / DF-2-06) 0건화 입증
 
@@ -356,7 +357,7 @@ REQUIREMENTS.md 의 acceptance criteria 모두 본 plan UAT 로 최종 입증:
 
 ## Phase 7 결과
 
-**Phase 7 결과:** KTC 2차 결함 2건 (DF-2-05 / DF-2-06) 0건화 — 사용자 UAT 15/15 통과. v1.0.3 인스톨러 production-ready (SHA256 `9ECAF3C3018451976469C9CF1A142868AF800CBEB48AB6C9F80B386D093B4BC6`). Audit trail gap 은 다음 milestone follow-up (RELI-NEW-01) 으로 이월.
+**Phase 7 결과:** KTC 2차 결함 2건 (DF-2-05 / DF-2-06) 0건화 — 사용자 UAT 15/15 통과. v1.0.3 인스톨러 production-ready (4차 final SHA256 `2072B5B54AA1417DAFBD91219DFF3B8A7923B67987D1E51559DF06CB66E61698`). Audit trail gap 은 다음 milestone follow-up (RELI-NEW-01) 으로 이월. 4차 빌드는 closeout 직후 OnboardingForm Shift 변형 일관성 patch (commit `f719195`) 통합 — v1.0.3 tag 미배포 상태에서 re-open cycle.
 
 ## Self-Check: PASSED
 
@@ -364,7 +365,7 @@ REQUIREMENTS.md 의 acceptance criteria 모두 본 plan UAT 로 최종 입증:
 
 - 파일 존재: `.planning/phases/07-json-저장-결함수정/07-03-SUMMARY.md` ✓ (본 파일)
 - 파일 존재: `.planning/phases/07-json-저장-결함수정/07-03-BUILD-LOG.md` ✓
-- 파일 존재: `installer/Output/ASLT-Setup-v1.0.3.exe` ✓ (gitignored, BUILD-LOG.md §3.3 SHA256 9ECAF3C3...)
+- 파일 존재: `installer/Output/ASLT-Setup-v1.0.3.exe` ✓ (gitignored, BUILD-LOG.md §3.4 4차 final SHA256 `2072B5B5...`; §3.3 3차 `9ECAF3C3...` superseded)
 - 커밋 존재: `18f3126` (FUNC-11 fix) ✓
 - 커밋 존재: `9eb6940` (FUNC-12 fix) ✓
 - 커밋 존재: `8a22445` (popup) ✓

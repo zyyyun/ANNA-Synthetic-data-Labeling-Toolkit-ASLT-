@@ -30,7 +30,7 @@
 - [x] Phase 7: JSON 저장 결함수정 (KTC 2차) (3/3 plans) — completed 2026-05-06
   - [x] 07-01: FUNC-11 / DF-2-05 SetMode 헬퍼 (commit `18f3126`)
   - [x] 07-02: FUNC-12 / DF-2-06 1-BBOX 가드 (commit `9eb6940`)
-  - [x] 07-03: 회귀 UAT 15/15 + 1.0.3 인스톨러 (SHA256 `9ECAF3C3...`) + in-place 업그레이드 검증
+  - [x] 07-03: 회귀 UAT 15/15 + 1.0.3 인스톨러 (4차 final, SHA256 `2072B5B5...`) + in-place 업그레이드 검증 + OnboardingForm 일관성 patch (commit `f719195`)
 
 상세: [milestones/v1.0.3-ROADMAP.md](milestones/v1.0.3-ROADMAP.md)
 
