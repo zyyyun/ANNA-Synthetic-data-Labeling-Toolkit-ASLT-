@@ -29,8 +29,8 @@ namespace ASLTv1.Forms
              "Alt+1 ~ Alt+0  : Person 확장 ID (11~20)\n" +
              "Ctrl+Z / Ctrl+Y : 실행 취소 / 다시 실행"),
             ("3. Entry/Exit 설정",
-             "추적을 시작할 프레임에서 Entry 버튼(또는 E 키),\n" +
-             "끝나는 프레임에서 Exit 버튼(또는 X 키)을 눌러\n" +
+             "추적을 시작할 프레임에서 Entry 버튼(또는 E 또는 Shift+E 키),\n" +
+             "끝나는 프레임에서 Exit 버튼(또는 X 또는 Shift+X 키)을 눌러\n" +
              "Waypoint 구간을 설정합니다.\n\n" +
              "Ctrl+N : Exit 프레임 BBOX ID 를 Entry 와 자동 매칭\n" +
              "Ctrl+S : COCO JSON 형식으로 저장\n\n" +
