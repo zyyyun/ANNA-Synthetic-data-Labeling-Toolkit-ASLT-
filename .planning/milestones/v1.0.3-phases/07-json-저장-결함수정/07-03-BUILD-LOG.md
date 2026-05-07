@@ -60,7 +60,7 @@
 | ISCC compile | 50.250 sec |
 | Total build | 54.4s |
 | Status | **Superseded** — UAT 마무리 직전 사용자가 로그 보존 정책 30일 → 180일 (6개월) 변경 요청. 소스 패치 commit `df890bd` 후 재빌드 필요. |
-| UAT result | 사용자 보고: 15/15 시나리오 모두 통과 (A-1..A-5, B-1..B-4, C-1, C-2, U-2..U-5). Audit log primary evidence 부재(§3.5 참조). |
+| UAT result | 사용자 보고: 15/15 시나리오 모두 통과 (A-1..A-5, B-1..B-4, C-1, C-2, U-2..U-5). Audit log primary evidence 부재(§3.6 참조). |
 
 ### 3.3 3차 빌드 — superseded
 
@@ -76,22 +76,36 @@
 | Total build | 70.2s |
 | Status | **Superseded** — milestone closeout 직후 사용자가 시작 가이드(`OnboardingForm`) 의 Entry/Exit 단축키 표기에서 Shift 변형 누락 발견. v1.0.3 tag 가 미배포 상태였으므로 v1.0.3 re-open cycle 진입 (소스 패치 commit `f719195`, tag 재생성). |
 
-### 3.4 4차 빌드 (final, ships as v1.0.3) — current
+### 3.4 4차 빌드 — superseded
 
 | 항목 | 값 |
 |---|---|
-| Path | `C:\Users\ANNA\AOLTv1.0\installer\Output\ASLT-Setup-v1.0.3.exe` |
-| 크기 | **98.19 MB** |
-| 임계값 | ≥ 50 MB (sanity threshold) — **Pass** |
+| Path | `installer/Output/ASLT-Setup-v1.0.3.exe` (덮어쓰기됨) |
+| 크기 | 98.19 MB |
 | Last Modified | 2026-05-07 10:38:46 |
 | Version (csproj) | 1.0.3 |
 | SHA256 | `2072B5B54AA1417DAFBD91219DFF3B8A7923B67987D1E51559DF06CB66E61698` |
 | Includes | commit `18f3126` (FUNC-11), `9eb6940` (FUNC-12), `8a22445` (popup), `df890bd` (retention), `f719195` (시작 가이드 Shift 변형) |
 | ISCC compile | 61.0 sec |
 | Total build | 65.4s |
-| Status | **Final** — Phase 7 ship target. 3차 빌드와 source-level diff: `Forms/OnboardingForm.cs:32-33` 2자리 (Entry/Exit 카드 텍스트 — popup fix `8a22445` 와 일관성 패턴). 사용자 검증 측면에서 동작 동일. |
+| Status | **Superseded** — re-tag 직후 사용자가 FUNC-12 fix 의 implementation gap 발견. `SaveCurrentLabelingData()` 가 6 군데에서 호출되는데 자동 저장 path 2 군데 (영상 전환 시 "저장 확인" → Yes, 폼 종료 시 "저장 확인" → Yes) 가 unguarded 였음. v1.0.3 tag 가 미배포 상태였으므로 5차 빌드 cycle 진입 (소스 패치 commit `29be68e`, tag 재생성). |
 
-### 3.5 Audit log evidence — partial
+### 3.5 5차 빌드 (final, ships as v1.0.3) — current
+
+| 항목 | 값 |
+|---|---|
+| Path | `C:\Users\ANNA\AOLTv1.0\installer\Output\ASLT-Setup-v1.0.3.exe` |
+| 크기 | **98.19 MB** |
+| 임계값 | ≥ 50 MB (sanity threshold) — **Pass** |
+| Last Modified | 2026-05-07 16:39:11 |
+| Version (csproj) | 1.0.3 |
+| SHA256 | `D139CD900A36F2CB098DB66002CC82D4E61CA84FC0F90FEC547FA577C028B496` |
+| Includes | commit `18f3126` (FUNC-11), `9eb6940` (FUNC-12 v1), `8a22445` (popup), `df890bd` (retention), `f719195` (OnboardingForm Shift), `29be68e` (FUNC-12 보강: close/switch 자동 저장 path) |
+| ISCC compile | 60.2 sec |
+| Total build | 64.5s |
+| Status | **Final** — Phase 7 ship target. 4차 빌드와 source-level diff: `Forms/MainForm.cs` — `TryGuardOneBoxSave()` 헬퍼 신규 (line 914-952), `btnExportJson_Click` inline 가드 → 헬퍼 호출, 영상 전환 / 폼 종료 자동 저장 path 에 가드 추가. FUNC-12 acceptance criteria "JSON 저장 시 (generic)" 가 모든 save 진입점에서 보호됨. |
+
+### 3.6 Audit log evidence — partial
 
 `%LOCALAPPDATA%\ANNA\ASLT\logs\ASLT-2026-05-06.log` 에 본 plan 시점 (~17:02) 까지 기록된 [AUDIT] 엔트리:
 
