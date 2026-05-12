@@ -224,6 +224,15 @@ namespace ASLTv1.Services
                 currentFrame?.Dispose();
                 currentFrame = new Mat();
 
+                // PERF-V2-JITTER-INST (D: gc2): 호출 간 Gen2 collection delta — large bitmap 압박 추적.
+                int gen2Delta = 0;
+                if (PerfLog.Enabled)
+                {
+                    int gen2Now = GC.CollectionCount(2);
+                    gen2Delta = gen2Now - PerfLog.LastGen2Count;
+                    PerfLog.LastGen2Count = gen2Now;
+                }
+
                 // PerfLog: 디코드 ms 측정 — 첫 Read 만 측정 (retry loop 는 의도된 fallback 으로 신호 가치 없음)
                 long decodeMs = 0;
                 Stopwatch? swDecode = PerfLog.Enabled ? Stopwatch.StartNew() : null;
@@ -260,8 +269,8 @@ namespace ASLTv1.Services
 
                 if (PerfLog.Enabled)
                 {
-                    Log.Debug("[PERF] LoadFrame f={Frame} {W}x{H} decode={DecodeMs}ms toBmp={ToBmpMs}ms skipSeek={SkipSeek}",
-                        frameIndex, FrameWidth, FrameHeight, decodeMs, toBmpMs, skipSeek);
+                    Log.Debug("[PERF] LoadFrame f={Frame} {W}x{H} decode={DecodeMs}ms toBmp={ToBmpMs}ms skipSeek={SkipSeek} gc2={Gen2Delta}",
+                        frameIndex, FrameWidth, FrameHeight, decodeMs, toBmpMs, skipSeek, gen2Delta);
                 }
 
                 currentFrameIndex = frameIndex;

@@ -525,6 +525,13 @@ namespace ASLTv1.Forms
                 {
                     pictureBoxVideo.Image?.Dispose();
                     pictureBoxVideo.Image = bitmap;
+
+                    // PERF-V2-JITTER-INST (C: paintLatency): PictureBox 자동 스케일링 비용 추적을 위해
+                    // image set 시점 timestamp 를 기록. Paint 시작에서 delta = paintLatency 계산.
+                    if (PerfLog.Enabled)
+                    {
+                        PerfLog.LastImageSetTimestamp = Stopwatch.GetTimestamp();
+                    }
                 }
 
                 // Rebind selected box when frame changes
@@ -592,6 +599,32 @@ namespace ASLTv1.Forms
                 }
 
                 pictureBoxVideo.Invalidate();
+
+                // PERF-V2-JITTER-INST (B: Playback fps): LoadFrame 호출 간격을 30프레임 윈도우로 누적,
+                // 30개 채워지면 avgGap/maxGap/fps 한 줄 출력 후 리셋.
+                // 첫 LoadFrame (LastLoadFrameTimestamp==0) 은 delta 의미 없어 skip, timestamp 만 기록.
+                if (PerfLog.Enabled)
+                {
+                    long now = Stopwatch.GetTimestamp();
+                    if (PerfLog.LastLoadFrameTimestamp != 0)
+                    {
+                        long delta = now - PerfLog.LastLoadFrameTimestamp;
+                        PerfLog.IntervalSumTicks += delta;
+                        if (delta > PerfLog.MaxIntervalTicks) PerfLog.MaxIntervalTicks = delta;
+                        PerfLog.FrameCounter++;
+                        if (PerfLog.FrameCounter >= 30)
+                        {
+                            double avgMs = (PerfLog.IntervalSumTicks * 1000.0 / Stopwatch.Frequency) / PerfLog.FrameCounter;
+                            double maxMs = PerfLog.MaxIntervalTicks * 1000.0 / Stopwatch.Frequency;
+                            double fps = avgMs > 0 ? 1000.0 / avgMs : 0;
+                            Log.Debug("[PERF] Playback avgGap={AvgMs:F1}ms maxGap={MaxMs:F1}ms fps={Fps:F1}", avgMs, maxMs, fps);
+                            PerfLog.FrameCounter = 0;
+                            PerfLog.IntervalSumTicks = 0;
+                            PerfLog.MaxIntervalTicks = 0;
+                        }
+                    }
+                    PerfLog.LastLoadFrameTimestamp = now;
+                }
             }
             catch (OpenCvSharp.OpenCVException ocvEx)
             {
@@ -1690,6 +1723,15 @@ namespace ASLTv1.Forms
             if (pictureBoxVideo.Image == null) return;
 
             Stopwatch? swPaint = PerfLog.Enabled ? Stopwatch.StartNew() : null;
+            // PERF-V2-JITTER-INST (C: paintLatency): image set → paint 시작 delta.
+            // PictureBox 자동 스케일링 비용 추정 — high res 이미지 + zoom mode 의 letterbox 비용 추적.
+            double paintLatencyMs = 0;
+            if (PerfLog.Enabled)
+            {
+                long imageSetTs = PerfLog.LastImageSetTimestamp;
+                if (imageSetTs != 0)
+                    paintLatencyMs = (Stopwatch.GetTimestamp() - imageSetTs) * 1000.0 / Stopwatch.Frequency;
+            }
             try
             {
                 Graphics g = e.Graphics;
@@ -1746,10 +1788,11 @@ namespace ASLTv1.Forms
                 {
                     swPaint.Stop();
                     // PerfLog: paint 경과. boxes/이미지 크기 함께 출력 — 박스 N · 해상도가 비용에 어떻게 기여하는지 확인.
-                    Log.Debug("[PERF] Paint f={Frame} boxes={N} elapsed={Ms}ms pbSize={W}x{H} imgSize={IW}x{IH}",
+                    Log.Debug("[PERF] Paint f={Frame} boxes={N} elapsed={Ms}ms paintLatency={LatencyMs:F1}ms pbSize={W}x{H} imgSize={IW}x{IH}",
                         _videoService.CurrentFrameIndex,
                         cachedCurrentFrameBoxes?.Count ?? 0,
                         swPaint.ElapsedMilliseconds,
+                        paintLatencyMs,
                         pictureBoxVideo.Width, pictureBoxVideo.Height,
                         pictureBoxVideo.Image?.Width ?? 0,
                         pictureBoxVideo.Image?.Height ?? 0);
