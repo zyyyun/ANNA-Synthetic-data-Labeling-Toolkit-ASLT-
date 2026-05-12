@@ -5,6 +5,7 @@ using OpenCvSharp.Extensions;
 using FFMpegCore;
 using FFMpegCore.Enums;
 using ASLTv1.Models;
+using ASLTv1.Helpers;
 
 namespace ASLTv1.Services
 {
@@ -222,7 +223,16 @@ namespace ASLTv1.Services
 
                 currentFrame?.Dispose();
                 currentFrame = new Mat();
+
+                // PerfLog: 디코드 ms 측정 — 첫 Read 만 측정 (retry loop 는 의도된 fallback 으로 신호 가치 없음)
+                long decodeMs = 0;
+                Stopwatch? swDecode = PerfLog.Enabled ? Stopwatch.StartNew() : null;
                 videoCapture.Read(currentFrame);
+                if (swDecode != null)
+                {
+                    swDecode.Stop();
+                    decodeMs = swDecode.ElapsedMilliseconds;
+                }
 
                 // 일부 코덱은 첫 Read 후에도 empty Mat — 후속 Read 호출에서 디코더 버퍼가 채워짐.
                 int retryCount = 0;
@@ -236,9 +246,22 @@ namespace ASLTv1.Services
                 _isFreshlyOpened = false;
 
                 Bitmap? bitmap = null;
+                long toBmpMs = 0;
                 if (!currentFrame.Empty())
                 {
+                    Stopwatch? swToBmp = PerfLog.Enabled ? Stopwatch.StartNew() : null;
                     bitmap = BitmapConverter.ToBitmap(currentFrame);
+                    if (swToBmp != null)
+                    {
+                        swToBmp.Stop();
+                        toBmpMs = swToBmp.ElapsedMilliseconds;
+                    }
+                }
+
+                if (PerfLog.Enabled)
+                {
+                    Log.Debug("[PERF] LoadFrame f={Frame} {W}x{H} decode={DecodeMs}ms toBmp={ToBmpMs}ms skipSeek={SkipSeek}",
+                        frameIndex, FrameWidth, FrameHeight, decodeMs, toBmpMs, skipSeek);
                 }
 
                 currentFrameIndex = frameIndex;
