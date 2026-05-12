@@ -4,7 +4,7 @@ milestone: v1.0.3
 milestone_name: JSON 저장 결함 수정 (KTC 2차)
 status: shipped
 shipped_at: 2026-05-06
-last_updated: "2026-05-12T04:27:00Z"
+last_updated: "2026-05-12T05:55:00Z"
 last_activity: 2026-05-12
 progress:
   total_phases: 1
@@ -59,9 +59,10 @@ None — milestone 종료. 다음 milestone 의 fresh requirements 는 `/gsd:new
 | 260421-mzz | Codex 교차검증 후속 — installer uninstall + build.bat 내구성 | 2026-04-21 | ef84820 | [260421-mzz](./quick/260421-mzz-codex-installer-uninstall-build-bat/) |
 | 260427-eyf | Installer 빌드 자동화 + 1.0.0 → 1.0.1 bump | 2026-04-27 | dbe7a84 | [260427-eyf](./quick/260427-eyf-installer-1-0-1/) |
 | 260512-ifn | 영상 hot path perf 진단 계측 (PerfLog + F12 토글, LoadFrame/Paint/MouseMove) | 2026-05-12 | cb8d7f7 | [260512-ifn](./quick/260512-ifn-perf-instrumentation-for-video-hot-paths/) |
+| 260512-kma | Timer 정밀도 수정 (timeBeginPeriod 1ms scheduler) + v2 jitter 계측 (Playback fps, paintLatency, gc2) | 2026-05-12 | 91a0b39 | [260512-kma](./quick/260512-kma-timer-fix-timebeginperiod-v2-jitter-inst/) |
 
 ## Session Continuity
 
-Last session: 2026-05-12T04:27:00Z
-Stopped at: Quick task 260512-ifn 완료 — 고해상도/장시간 영상 재생 성능 병목 측정용 PerfLog 토글(F12) + 3개 핫패스(LoadFrame decode/ToBitmap, Paint elapsed, MouseMove invalidate/sec) 계측 추가. 다음 단계는 사용자가 의심 영상으로 F12 토글 후 Serilog 로그에서 ms 분포 확인.
+Last session: 2026-05-12T05:55:00Z
+Stopped at: Quick task 260512-kma 완료 — v1 데이터 분석에서 발견한 timer 정밀도 문제 (Windows.Forms.Timer 47ms → 30fps 영상이 21fps로 재생) 수정 + v2 잔존 jitter 계측 추가. timeBeginPeriod(1) P/Invoke 로 OS scheduler 1ms tick 적용. PerfLog 확장 (paintLatency, gc2, Playback avgGap/maxGap/fps). 다음 단계는 사용자가 빌드 후 F12 켜고 fhd_30fps_2h.mkv 재생해 Playback fps 가 21→30 으로 회복하는지 확인.
 Resume file: None
