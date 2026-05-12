@@ -1,4 +1,5 @@
 using ASLTv1.Forms;
+using ASLTv1.Helpers;
 using ASLTv1.Services;
 using Serilog;
 
@@ -37,10 +38,21 @@ namespace ASLTv1
             try
             {
                 ApplicationConfiguration.Initialize();
+
+                // PERF-TIMER-FIX: Windows scheduler granularity 를 1ms 로 변경.
+                // System.Windows.Forms.Timer.Interval=33 이 기본 ~15.625ms granularity 에서 46.875ms 로 굳는 결함을 해소.
+                // BeginPeriod 의 return value (0=TIMERR_NOERROR) 는 무시 — 실패해도 앱은 정상 동작해야 함 (CLAUDE.md: Critical/High 0건).
+                // EndPeriod 와 1:1 매칭 필수 — finally 에서 정확히 1회 호출.
+                WinmmTimer.BeginPeriod(1);
+
                 Application.Run(new MainForm());
             }
             finally
             {
+                // PERF-TIMER-FIX: BeginPeriod(1) 과 1:1 매칭.
+                // BeginPeriod 호출이 실패했더라도 EndPeriod 호출은 안전 (no-op).
+                WinmmTimer.EndPeriod(1);
+
                 LogService.AuditAppStop();
                 LogService.CloseAndFlush();
             }
