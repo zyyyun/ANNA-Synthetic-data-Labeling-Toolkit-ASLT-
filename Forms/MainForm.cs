@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -2803,6 +2804,18 @@ namespace ASLTv1.Forms
                 if (e.KeyCode == Keys.F1) { btnLabelPerson_Click(sender, e); e.Handled = true; return; }
                 if (e.KeyCode == Keys.F2) { btnLabelVehicle_Click(sender, e); e.Handled = true; return; }
                 if (e.KeyCode == Keys.F3) { btnLabelEvent_Click(sender, e); e.Handled = true; return; }
+                if (e.KeyCode == Keys.F12)
+                {
+                    PerfLog.Enabled = !PerfLog.Enabled;
+                    Log.Information("[PERF] toggle Enabled={Enabled}", PerfLog.Enabled);
+                    MessageBox.Show(
+                        $"PerfLog: {(PerfLog.Enabled ? "ON" : "OFF")}",
+                        "Perf Instrumentation",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                    e.Handled = true;
+                    return;
+                }
             }
 
             // Ctrl+1~0: ID assignment for person
