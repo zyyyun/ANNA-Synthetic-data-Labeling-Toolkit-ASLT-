@@ -1038,7 +1038,7 @@ namespace ASLTv1.Forms
                         return;
                     }
 
-                    timerPlayback.Interval = 33;
+                    timerPlayback.Interval = 8;
                     timerPlayback.Start();
                 }
                 else
@@ -1077,7 +1077,7 @@ namespace ASLTv1.Forms
             {
                 int nextFrame = Math.Min(_videoService.TotalFrames - 1, _videoService.CurrentFrameIndex + framesToMove);
                 LoadFrame(nextFrame);
-                lastFrameTime = currentTime;
+                lastFrameTime += (long)(framesToMove * msPerFrame);
 
                 if (nextFrame >= _videoService.TotalFrames - 1)
                 {
