@@ -98,6 +98,11 @@ namespace ASLTv1.Forms
         private int lastCachedFrameForPaint = -1;
         private List<BoundingBox> cachedCurrentFrameBoxes = new List<BoundingBox>();
 
+        // PerfLog: MouseMove invalidate counter (1초 윈도우 누적)
+        private int _perfMouseMoveInvalidates;
+        private long _perfMouseMoveLastFlushTicks; // DateTime.UtcNow.Ticks
+        private string _perfMouseMoveLastModeTag = "idle";
+
         #endregion
 
         #region Window Drag
@@ -1684,51 +1689,70 @@ namespace ASLTv1.Forms
         {
             if (pictureBoxVideo.Image == null) return;
 
-            Graphics g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            int currentFrameIndex = _videoService.CurrentFrameIndex;
-
-            if (lastCachedFrameForPaint != currentFrameIndex)
+            Stopwatch? swPaint = PerfLog.Enabled ? Stopwatch.StartNew() : null;
+            try
             {
-                cachedCurrentFrameBoxes = GetBboxesForFrame(currentFrameIndex);
-                lastCachedFrameForPaint = currentFrameIndex;
-            }
+                Graphics g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                int currentFrameIndex = _videoService.CurrentFrameIndex;
 
-            // Draw all boxes except selected
-            foreach (var box in cachedCurrentFrameBoxes)
-            {
-                if (box == selectedBox) continue;
-                DrawBoundingBox(g, box, false);
-            }
-
-            // Draw selected box on top
-            if (selectedBox != null && selectedBox.FrameIndex == currentFrameIndex)
-            {
-                DrawBoundingBox(g, selectedBox, true);
-            }
-
-            // Draw in-progress drawing box
-            if (isDrawing && drawingBox != null)
-            {
-                var viewRect = CoordinateHelper.ImageToView(
-                    new RectangleF(drawingBox.Rectangle.X, drawingBox.Rectangle.Y, drawingBox.Rectangle.Width, drawingBox.Rectangle.Height), pictureBoxVideo);
-                Color boxColor = GetColorForLabel(drawingBox.Label);
-                using (Pen pen = new Pen(boxColor, 3) { DashStyle = DashStyle.Dash })
-                    g.DrawRectangle(pen, viewRect.X, viewRect.Y, viewRect.Width, viewRect.Height);
-            }
-
-            // RELI-06 (05.5-02 gap closure): first-paint handshake —
-            // 첫 프레임이 실제로 화면에 페인트된 직후 한 번만 ready 전이 + 지연된 자동 재생 소비.
-            if (!_isVideoReady && _videoService.IsVideoLoaded && pictureBoxVideo.Image != null)
-            {
-                _isVideoReady = true;
-                if (_pendingAutoPlay)
+                if (lastCachedFrameForPaint != currentFrameIndex)
                 {
-                    _pendingAutoPlay = false;
-                    if (!isPlaying)
+                    cachedCurrentFrameBoxes = GetBboxesForFrame(currentFrameIndex);
+                    lastCachedFrameForPaint = currentFrameIndex;
+                }
+
+                // Draw all boxes except selected
+                foreach (var box in cachedCurrentFrameBoxes)
+                {
+                    if (box == selectedBox) continue;
+                    DrawBoundingBox(g, box, false);
+                }
+
+                // Draw selected box on top
+                if (selectedBox != null && selectedBox.FrameIndex == currentFrameIndex)
+                {
+                    DrawBoundingBox(g, selectedBox, true);
+                }
+
+                // Draw in-progress drawing box
+                if (isDrawing && drawingBox != null)
+                {
+                    var viewRect = CoordinateHelper.ImageToView(
+                        new RectangleF(drawingBox.Rectangle.X, drawingBox.Rectangle.Y, drawingBox.Rectangle.Width, drawingBox.Rectangle.Height), pictureBoxVideo);
+                    Color boxColor = GetColorForLabel(drawingBox.Label);
+                    using (Pen pen = new Pen(boxColor, 3) { DashStyle = DashStyle.Dash })
+                        g.DrawRectangle(pen, viewRect.X, viewRect.Y, viewRect.Width, viewRect.Height);
+                }
+
+                // RELI-06 (05.5-02 gap closure): first-paint handshake —
+                // 첫 프레임이 실제로 화면에 페인트된 직후 한 번만 ready 전이 + 지연된 자동 재생 소비.
+                if (!_isVideoReady && _videoService.IsVideoLoaded && pictureBoxVideo.Image != null)
+                {
+                    _isVideoReady = true;
+                    if (_pendingAutoPlay)
                     {
-                        btnPlay_Click(null, EventArgs.Empty);
+                        _pendingAutoPlay = false;
+                        if (!isPlaying)
+                        {
+                            btnPlay_Click(null, EventArgs.Empty);
+                        }
                     }
+                }
+            }
+            finally
+            {
+                if (swPaint != null)
+                {
+                    swPaint.Stop();
+                    // PerfLog: paint 경과. boxes/이미지 크기 함께 출력 — 박스 N · 해상도가 비용에 어떻게 기여하는지 확인.
+                    Log.Debug("[PERF] Paint f={Frame} boxes={N} elapsed={Ms}ms pbSize={W}x{H} imgSize={IW}x{IH}",
+                        _videoService.CurrentFrameIndex,
+                        cachedCurrentFrameBoxes?.Count ?? 0,
+                        swPaint.ElapsedMilliseconds,
+                        pictureBoxVideo.Width, pictureBoxVideo.Height,
+                        pictureBoxVideo.Image?.Width ?? 0,
+                        pictureBoxVideo.Image?.Height ?? 0);
                 }
             }
         }
@@ -1943,11 +1967,13 @@ namespace ASLTv1.Forms
                 int width = (int)Math.Abs(currentImagePoint.X - startImagePoint.X);
                 int height = (int)Math.Abs(currentImagePoint.Y - startImagePoint.Y);
                 drawingBox.Rectangle = new Rectangle(x, y, width, height);
+                PerfRecordMouseMoveInvalidate("drawing");
                 pictureBoxVideo.Invalidate();
             }
             else if (isResizing && selectedBox != null)
             {
                 PerformResize(e.Location);
+                PerfRecordMouseMoveInvalidate("resize");
                 pictureBoxVideo.Invalidate();
             }
             else if (isWaitingForDoubleClick && selectedBox != null)
@@ -1969,6 +1995,7 @@ namespace ASLTv1.Forms
                 // FUNC-03: 이미지 범위 클램핑
                 if (pictureBoxVideo.Image != null)
                     selectedBox.Rectangle = CoordinateHelper.ClampToImage(selectedBox.Rectangle, pictureBoxVideo.Image.Width, pictureBoxVideo.Image.Height);
+                PerfRecordMouseMoveInvalidate("drag");
                 pictureBoxVideo.Invalidate();
             }
             else if (currentMode == DrawMode.Select && selectedBox != null)
@@ -1982,6 +2009,27 @@ namespace ASLTv1.Forms
             {
                 pictureBoxVideo.Cursor = currentMode == DrawMode.Select ? Cursors.Hand :
                     currentMode == DrawMode.Draw ? Cursors.Cross : Cursors.Default;
+            }
+        }
+
+        // PerfLog: MouseMove invalidate 누적 카운터 + 1초 윈도우 flush
+        private void PerfRecordMouseMoveInvalidate(string modeTag)
+        {
+            if (!PerfLog.Enabled) return;
+            _perfMouseMoveInvalidates++;
+            _perfMouseMoveLastModeTag = modeTag;
+            long nowTicks = DateTime.UtcNow.Ticks;
+            if (_perfMouseMoveLastFlushTicks == 0)
+            {
+                _perfMouseMoveLastFlushTicks = nowTicks;
+                return;
+            }
+            if (nowTicks - _perfMouseMoveLastFlushTicks >= TimeSpan.FromSeconds(1).Ticks)
+            {
+                Log.Debug("[PERF] MouseMove invalidates={N}/sec mode={Mode}",
+                    _perfMouseMoveInvalidates, _perfMouseMoveLastModeTag);
+                _perfMouseMoveInvalidates = 0;
+                _perfMouseMoveLastFlushTicks = nowTicks;
             }
         }
 
