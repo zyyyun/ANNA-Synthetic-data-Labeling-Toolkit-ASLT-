@@ -510,7 +510,7 @@ namespace ASLTv1.Forms
                 (pictureBoxVideo.Height - labelLoading.Height) / 2);
         }
 
-        private void LoadFrame(int frameIndex)
+        private void LoadFrame(int frameIndex, bool fromTimerTick = false)
         {
             try
             {
@@ -531,6 +531,14 @@ namespace ASLTv1.Forms
                     if (PerfLog.Enabled)
                     {
                         PerfLog.LastImageSetTimestamp = Stopwatch.GetTimestamp();
+                    }
+
+                    // 재생 중 사용자가 seek 한 직후 타이머가 큰 elapsedMs 로 누적 cold seek cascade 를
+                    // 만드는 것을 차단한다. 타이머 tick 자체는 lastFrameTime 누적식으로 drift 보정해야
+                    // 하므로 (260512-m02) 이 경로에서는 reset 하지 않는다.
+                    if (!fromTimerTick && isPlaying)
+                    {
+                        lastFrameTime = DateTime.Now.Ticks / 10000;
                     }
                 }
 
@@ -1076,7 +1084,7 @@ namespace ASLTv1.Forms
             if (framesToMove > 0)
             {
                 int nextFrame = Math.Min(_videoService.TotalFrames - 1, _videoService.CurrentFrameIndex + framesToMove);
-                LoadFrame(nextFrame);
+                LoadFrame(nextFrame, fromTimerTick: true);
                 lastFrameTime += (long)(framesToMove * msPerFrame);
 
                 if (nextFrame >= _videoService.TotalFrames - 1)
