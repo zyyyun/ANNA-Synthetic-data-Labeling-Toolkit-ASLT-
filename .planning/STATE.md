@@ -4,7 +4,7 @@ milestone: v1.0.3
 milestone_name: JSON 저장 결함 수정 (KTC 2차)
 status: shipped
 shipped_at: 2026-05-06
-last_updated: "2026-05-12T05:55:00Z"
+last_updated: "2026-05-12T06:55:00Z"
 last_activity: 2026-05-12
 progress:
   total_phases: 1
@@ -60,9 +60,10 @@ None — milestone 종료. 다음 milestone 의 fresh requirements 는 `/gsd:new
 | 260427-eyf | Installer 빌드 자동화 + 1.0.0 → 1.0.1 bump | 2026-04-27 | dbe7a84 | [260427-eyf](./quick/260427-eyf-installer-1-0-1/) |
 | 260512-ifn | 영상 hot path perf 진단 계측 (PerfLog + F12 토글, LoadFrame/Paint/MouseMove) | 2026-05-12 | cb8d7f7 | [260512-ifn](./quick/260512-ifn-perf-instrumentation-for-video-hot-paths/) |
 | 260512-kma | Timer 정밀도 수정 (timeBeginPeriod 1ms scheduler) + v2 jitter 계측 (Playback fps, paintLatency, gc2) | 2026-05-12 | 91a0b39 | [260512-kma](./quick/260512-kma-timer-fix-timebeginperiod-v2-jitter-inst/) |
+| 260512-m02 | 실제 timer fix — Windows.Forms.Timer Interval 33→8 + lastFrameTime drift 누적 차단 (22fps→30fps 회복) | 2026-05-12 | ccf1218 | [260512-m02](./quick/260512-m02-real-timer-fix-interval-8-lastframetime-/) |
 
 ## Session Continuity
 
-Last session: 2026-05-12T05:55:00Z
-Stopped at: Quick task 260512-kma 완료 — v1 데이터 분석에서 발견한 timer 정밀도 문제 (Windows.Forms.Timer 47ms → 30fps 영상이 21fps로 재생) 수정 + v2 잔존 jitter 계측 추가. timeBeginPeriod(1) P/Invoke 로 OS scheduler 1ms tick 적용. PerfLog 확장 (paintLatency, gc2, Playback avgGap/maxGap/fps). 다음 단계는 사용자가 빌드 후 F12 켜고 fhd_30fps_2h.mkv 재생해 Playback fps 가 21→30 으로 회복하는지 확인.
+Last session: 2026-05-12T06:55:00Z
+Stopped at: Quick task 260512-m02 완료 — 260512-kma 의 timeBeginPeriod 효과 미미 측정 후 진짜 원인 발견 (1) Forms.Timer Interval=33 강제 ~45ms 반올림, (2) `lastFrameTime = currentTime` drift 버그 매 tick 14ms 손실 누적. 2 라인 fix (Interval 33→8, lastFrameTime 누적식). 다음 단계는 사용자가 빌드 후 F12 켜고 fhd_30fps_2h.mkv 재생 후 순차 재생 timestamp delta 가 ~33ms 로 떨어지는지 확인.
 Resume file: None
