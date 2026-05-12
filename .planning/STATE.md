@@ -4,8 +4,8 @@ milestone: v1.0.3
 milestone_name: JSON 저장 결함 수정 (KTC 2차)
 status: shipped
 shipped_at: 2026-05-06
-last_updated: "2026-05-07T07:42:00Z"
-last_activity: 2026-05-07
+last_updated: "2026-05-12T04:27:00Z"
+last_activity: 2026-05-12
 progress:
   total_phases: 1
   completed_phases: 1
@@ -58,9 +58,10 @@ None — milestone 종료. 다음 milestone 의 fresh requirements 는 `/gsd:new
 |---|-------------|------|--------|-----------|
 | 260421-mzz | Codex 교차검증 후속 — installer uninstall + build.bat 내구성 | 2026-04-21 | ef84820 | [260421-mzz](./quick/260421-mzz-codex-installer-uninstall-build-bat/) |
 | 260427-eyf | Installer 빌드 자동화 + 1.0.0 → 1.0.1 bump | 2026-04-27 | dbe7a84 | [260427-eyf](./quick/260427-eyf-installer-1-0-1/) |
+| 260512-ifn | 영상 hot path perf 진단 계측 (PerfLog + F12 토글, LoadFrame/Paint/MouseMove) | 2026-05-12 | cb8d7f7 | [260512-ifn](./quick/260512-ifn-perf-instrumentation-for-video-hot-paths/) |
 
 ## Session Continuity
 
-Last session: 2026-05-07T07:42:00Z
-Stopped at: v1.0.3 milestone close + 5차 빌드 cycle (re-tag 직후 FUNC-12 implementation gap closure — close/switch 자동 저장 path 보호). archives 갱신 완료, ASLT-Setup-v1.0.3.exe (5차 final) shipped, git tag v1.0.3 재생성 완료
+Last session: 2026-05-12T04:27:00Z
+Stopped at: Quick task 260512-ifn 완료 — 고해상도/장시간 영상 재생 성능 병목 측정용 PerfLog 토글(F12) + 3개 핫패스(LoadFrame decode/ToBitmap, Paint elapsed, MouseMove invalidate/sec) 계측 추가. 다음 단계는 사용자가 의심 영상으로 F12 토글 후 Serilog 로그에서 ms 분포 확인.
 Resume file: None
