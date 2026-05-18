@@ -411,7 +411,7 @@ namespace ASLTv1.Forms
                 var bitmap = _videoService.LoadFrame(0);
                 if (bitmap != null)
                 {
-                    pictureBoxVideo.Image?.Dispose();
+                    // 260512-perf (Phase 2): Bitmap pool 이 슬롯을 소유 — 여기서 Dispose 하면 다음 frame 의 in-place write 가 disposed bitmap 에 작동해 crash.
                     pictureBoxVideo.Image = bitmap;
                 }
 
@@ -523,7 +523,7 @@ namespace ASLTv1.Forms
                 var bitmap = _videoService.LoadFrame(frameIndex);
                 if (bitmap != null)
                 {
-                    pictureBoxVideo.Image?.Dispose();
+                    // 260512-perf (Phase 2): Bitmap pool 이 슬롯을 소유 — Dispose 호출 제거.
                     pictureBoxVideo.Image = bitmap;
 
                     // PERF-V2-JITTER-INST (C: paintLatency): PictureBox 자동 스케일링 비용 추적을 위해

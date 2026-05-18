@@ -18,6 +18,13 @@ namespace ASLTv1.Services
 
         private VideoCapture? videoCapture;
         private Mat? currentFrame;
+        // 260512-perf (Phase 2): 2-슬롯 Bitmap pool 로 LoadFrame 마다 새 Bitmap 할당 회피.
+        // PictureBox.Image 가 항상 마지막에 set 된 slot 을 참조 → 다음 LoadFrame 은
+        // 다른 slot 에 in-place write 하므로 표시 중 슬롯과 충돌하지 않음.
+        // 영상 차원 변경 시 mismatch 슬롯을 dispose 후 재할당. GC 압박을 매 frame ~6MB LOH
+        // 할당에서 0 으로 감소시켜 Gen2 GC 빈도 감소 → jitter spike 제거.
+        private readonly System.Drawing.Bitmap?[] _bitmapPool = new System.Drawing.Bitmap?[2];
+        private int _poolIdx = -1;
         private string currentVideoFile = "";
         private int currentFrameIndex;
         private int totalFrames;
@@ -221,8 +228,10 @@ namespace ASLTv1.Services
                     videoCapture.Set(VideoCaptureProperties.PosFrames, frameIndex);
                 }
 
-                currentFrame?.Dispose();
-                currentFrame = new Mat();
+                // 260512-perf (Phase 3): Mat 재사용 — videoCapture.Read 는 기존 Mat 에 in-place write.
+                // 매 frame dispose+new 사이클 제거로 unmanaged 메모리 churn 감소.
+                if (currentFrame == null)
+                    currentFrame = new Mat();
 
                 // PERF-V2-JITTER-INST (D: gc2): 호출 간 Gen2 collection delta — large bitmap 압박 추적.
                 int gen2Delta = 0;
@@ -259,7 +268,26 @@ namespace ASLTv1.Services
                 if (!currentFrame.Empty())
                 {
                     Stopwatch? swToBmp = PerfLog.Enabled ? Stopwatch.StartNew() : null;
-                    bitmap = BitmapConverter.ToBitmap(currentFrame);
+                    // 260512-perf (Phase 2): Bitmap pool — 2-슬롯 alternation.
+                    // 다음 슬롯 인덱스 계산. 차원 mismatch 시 dispose 후 재할당.
+                    int next = (_poolIdx + 1) & 1;
+                    var poolBmp = _bitmapPool[next];
+                    if (poolBmp == null
+                        || poolBmp.Width != currentFrame.Width
+                        || poolBmp.Height != currentFrame.Height)
+                    {
+                        poolBmp?.Dispose();
+                        // VideoCapture.Read 는 BGR 3-channel CV_8U 반환 → 24bpp RGB Bitmap.
+                        poolBmp = new System.Drawing.Bitmap(
+                            currentFrame.Width,
+                            currentFrame.Height,
+                            System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                        _bitmapPool[next] = poolBmp;
+                    }
+                    // in-place 변환 — Mat → 기존 Bitmap 픽셀 버퍼에 BGR 데이터 직접 복사.
+                    BitmapConverter.ToBitmap(currentFrame, poolBmp);
+                    bitmap = poolBmp;
+                    _poolIdx = next;
                     if (swToBmp != null)
                     {
                         swToBmp.Stop();
@@ -664,6 +692,14 @@ namespace ASLTv1.Services
 
                 currentFrame?.Dispose();
                 currentFrame = null;
+
+                // 260512-perf (Phase 2): Bitmap pool 정리. PictureBox.Image 가 이 슬롯들을
+                // 가리키더라도 Form 종료 컨텍스트라 disposal 순서가 paint 사이클 외이므로 안전.
+                for (int i = 0; i < _bitmapPool.Length; i++)
+                {
+                    _bitmapPool[i]?.Dispose();
+                    _bitmapPool[i] = null;
+                }
 
                 if (videoCapture != null)
                 {
