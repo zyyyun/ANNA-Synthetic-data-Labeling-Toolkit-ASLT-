@@ -66,10 +66,11 @@ None — milestone 종료. 다음 milestone 의 fresh requirements 는 `/gsd:new
 | 260512-gsv | GS인증 측 보고 — Shift+>/< 배속 단축키 textbox 포커스 시 차단 → ProcessCmdKey 로 이동하여 포커스 무관 작동 | 2026-05-12 | 48b7f5b | [260512-gsv](./quick/260512-gsv-shortcut-speed-shift-period-comma/) |
 | 260512-spd | 배속 시뮬레이션 공식 회귀 fix — `lastFrameTime += N * msPerFrame / playbackSpeed` (260512-m02 가 / playbackSpeed 누락 → 모든 속도가 1x 로 고착). 1x 의 30fps 회복은 항등식이라 영향 없음 | 2026-05-12 | 6ebf9c2 | (inline, 1-line fix) |
 | 260512-pf4 | 4x 부드러움 perf — FastPictureBox (Bilinear interpolation, paintLatency 9-12ms→8-10ms 측정) + Bitmap pool (LOH 할당 churn 제거, toBmp=0ms 확인) + Mat reuse (unmanaged 메모리 churn 제거). 좌표 시스템 무변경 | 2026-05-12 | ac91b46 + 6974468 | [260512-pf4](./quick/260512-pf4-fastpicturebox-bitmap-pool-mat-reuse/) |
-| 260512-pf5 | 4x cold seek cascade 차단 — `VideoService.LoadFrame` 의 작은 forward gap(2..60)을 Set(PosFrames) 대신 sequential Read 로 처리. OpenCV 의 GOP keyframe 점프 hidden cost (~150ms/jump) 회피. pf4 측정 후 발견한 진짜 4x 병목 (avgGap 135ms → ~20ms 예상) | 2026-05-12 | e65e0fe | [260512-pf5](./quick/260512-pf5-sequential-read-cold-seek-cascade-fix/) |
+| 260512-pf5 | 4x cold seek cascade 차단 — `VideoService.LoadFrame` 의 작은 forward gap(2..60)을 Set(PosFrames) 대신 sequential Read 로 처리. **실측 결과 회귀 (fps 7.4→6.5) — pf6 에서 롤백.** | 2026-05-12 | e65e0fe (롤백됨) | [260512-pf5](./quick/260512-pf5-sequential-read-cold-seek-cascade-fix/) |
+| 260512-pf6 | pf5 롤백 + Task A 멀티스레드 디코드. (1) pf5 가설 회귀 확인 후 sequential read 로직 원복. (2) `OPENCV_FFMPEG_CAPTURE_OPTIONS=threads;0` 환경변수로 OpenCV FFmpeg 의 H.264 디코드를 logical core 수만큼 병렬화. 1080p decode 8ms → 2-4ms 예상. CPU-first 접근 (GPU/외부 SDK 도입 없음) | 2026-05-12 | b6d424e + 0b2d258 | [260512-pf6](./quick/260512-pf6-rollback-pf5-multithread-decode/) |
 
 ## Session Continuity
 
-Last session: 2026-05-12T10:30:00Z
-Stopped at: 260512-pf5 완료 — pf4 측정 후 발견한 진짜 4x 병목 (OpenCV Set(PosFrames) 의 GOP keyframe hidden cost ~150ms/jump) 해결. VideoService.LoadFrame 에서 forward gap 2..60 시 Set 대신 sequential Read 로 처리. 디코더 pipeline warm 활용 → 4x cycle 200ms → ~20ms 예상. v1.0.4 installer 재빌드 (SHA256 7E6F588E...) 후 GS 측 전달 예정.
+Last session: 2026-05-12T11:00:00Z
+Stopped at: 260512-pf6 완료 — pf5 (sequential read) 실측 회귀 확인 후 롤백 + CPU-first Task A 진입 (OpenCV FFmpeg 멀티스레드 디코드 환경변수 활성화). 메타 교훈: 성능 한계 시 GPU 점프 패턴 교정 — CPU 옵션 (멀티스레드, background thread, OS hw accel) 충분히 탐색 후 GPU 검토. Task A 검증 후 부족 시 Task B (background producer thread) 또는 Task C (OS hw decode) 순차 진행. v1.0.4 installer 재빌드 후 GS 측 전달 예정.
 Resume file: None
