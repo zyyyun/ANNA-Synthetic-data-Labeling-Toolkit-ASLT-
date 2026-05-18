@@ -1085,7 +1085,11 @@ namespace ASLTv1.Forms
             {
                 int nextFrame = Math.Min(_videoService.TotalFrames - 1, _videoService.CurrentFrameIndex + framesToMove);
                 LoadFrame(nextFrame, fromTimerTick: true);
-                lastFrameTime += (long)(framesToMove * msPerFrame);
+                // 260512-spd: 속도 != 1.0 에서 시뮬레이션 회귀 수정.
+                // N 프레임 진행에 소비되는 wall clock = N * msPerFrame / playbackSpeed.
+                // 260512-m02 가 / playbackSpeed 누락하여 lastFrameTime 이 과도 누적 → 모든 속도가 1x 로 고착.
+                // 1x 에서는 / 1.0 항등식이므로 30fps 회복 (260512-m02) 영향 없음.
+                lastFrameTime += (long)(framesToMove * msPerFrame / playbackSpeed);
 
                 if (nextFrame >= _videoService.TotalFrames - 1)
                 {

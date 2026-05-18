@@ -64,9 +64,10 @@ None — milestone 종료. 다음 milestone 의 fresh requirements 는 `/gsd:new
 | 260512-sek | Seek cascade fix — 재생 중 사용자 seek 시 lastFrameTime 리셋으로 cold seek 폭주 차단 (15 user-seek paths) | 2026-05-12 | 5414a5c | (inline fix, PLAN not split) |
 | 260512-v04 | Version bump 1.0.3 → 1.0.4 + installer 재빌드 (perf 개선 누적 반영) | 2026-05-12 | 49b8319 | (inline) |
 | 260512-gsv | GS인증 측 보고 — Shift+>/< 배속 단축키 textbox 포커스 시 차단 → ProcessCmdKey 로 이동하여 포커스 무관 작동 | 2026-05-12 | 48b7f5b | [260512-gsv](./quick/260512-gsv-shortcut-speed-shift-period-comma/) |
+| 260512-spd | 배속 시뮬레이션 공식 회귀 fix — `lastFrameTime += N * msPerFrame / playbackSpeed` (260512-m02 가 / playbackSpeed 누락 → 모든 속도가 1x 로 고착). 1x 의 30fps 회복은 항등식이라 영향 없음 | 2026-05-12 | pending | (inline, 1-line fix) |
 
 ## Session Continuity
 
-Last session: 2026-05-12T09:00:00Z
-Stopped at: 260512-gsv 완료 — GS인증 측에서 보고한 Shift+>/< 배속 단축키 미작동 이슈 closure. 근본 원인은 MainForm_KeyDown 의 textbox/combobox 포커스 가드 (Ctrl+숫자, Ctrl+N, Alt+숫자, Enter, Escape 만 화이트리스트) 가 Shift+OemPeriod/Oemcomma 를 차단. 화살표 키와 동일 패턴으로 ProcessCmdKey 로 이동하여 해결. v1.0.4 installer 재빌드 후 GS인증 측 전달 예정.
+Last session: 2026-05-12T09:30:00Z
+Stopped at: 260512-spd 완료 — 260512-gsv 진단 중 발견한 ccf1218 회귀 (배속 시뮬레이션 공식이 / playbackSpeed 누락하여 1x 외 모든 속도가 1x 로 고착) 1줄 fix. GS인증 reviewer 의 원래 보고 (textbox 포커스 시 단축키 무반응) 는 48b7f5b 가 해결, 사용자 본인의 추가 검증 (라벨은 4x 로 변하지만 실제 속도 안 변함) 은 본 fix 가 해결. v1.0.4 installer 재빌드 후 전달 예정.
 Resume file: None
