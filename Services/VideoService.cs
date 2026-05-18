@@ -14,19 +14,6 @@ namespace ASLTv1.Services
     /// </summary>
     public class VideoService : IDisposable
     {
-        #region Constants
-
-        /// <summary>
-        /// 260512-pf5 (Phase 4): forward frame gap 이 이 값 이하면 explicit Set(PosFrames) 대신
-        /// sequential Read 로 처리. H.264 GOP 보통 30-60 frame — 그 이내에서는 sequential 이
-        /// keyframe 점프 + GOP decode chain 보다 빠르고 cold-seek cascade 를 방지함.
-        /// 4x 재생 시 timer tick 당 framesToMove=1-2 가 normal → 거의 항상 sequential 경로.
-        /// 16x 도 framesToMove=16 으로 threshold 안. 큰 user scrub jump 만 Set 경로로 빠진다.
-        /// </summary>
-        private const int SEQUENTIAL_READ_THRESHOLD = 60;
-
-        #endregion
-
         #region Fields
 
         private VideoCapture? videoCapture;
@@ -235,21 +222,13 @@ namespace ASLTv1.Services
                 // 일부 AVI 코덱은 Set(PosFrames) seek 후 Read 가 empty 를 반환하거나 seek 자체가 무시됨.
                 // sequential read 는 모든 코덱에서 안전하게 동작.
                 //
-                // 260512-pf5 (Phase 4): 작은 forward gap (2..SEQUENTIAL_READ_THRESHOLD) 은
-                // explicit Set(PosFrames) 대신 sequential Read 로 처리. Set 은 H.264 GOP 의
-                // 이전 keyframe 으로 점프 후 그 사이를 internal decode 하므로 30-frame jump 에
-                // 100-150ms 비용 발생 (4x 재생 시 매 tick 발생 → cascade). Sequential Read 는
-                // warm decoder pipeline 활용 — frame 당 4-8ms 만 들고 cascade 자체를 깨트림.
-                int gap = frameIndex - currentFrameIndex;
-                bool freshFirstRead = _isFreshlyOpened && frameIndex == 0;
-                bool isAdjacentNext = (gap == 1);
-                bool canSequential = gap > 1 && gap <= SEQUENTIAL_READ_THRESHOLD && !freshFirstRead;
-                bool skipSeek = freshFirstRead || isAdjacentNext || canSequential;
-
+                // 260512-pf6: Phase 4 (260512-pf5) 의 sequential read 시도는 실측 결과 OpenCvSharp 의
+                // C# ↔ C++ marshaling overhead (~4ms/call) 때문에 Set 의 internal batch decode 보다
+                // 오히려 느려 회귀. 4x 측정 결과 fps 6.5 (이전 7.4 대비 후퇴). 원복.
+                bool skipSeek = (_isFreshlyOpened && frameIndex == 0)
+                                || (frameIndex == currentFrameIndex + 1);
                 if (!skipSeek)
                 {
-                    // 큰 forward jump (> THRESHOLD), backward jump (gap <= 0), 또는 0 frame.
-                    // OpenCV 의 Set(PosFrames) 가 keyframe 점프로 처리 — sequential Read 보다 빠름.
                     videoCapture.Set(VideoCaptureProperties.PosFrames, frameIndex);
                 }
 
@@ -267,19 +246,10 @@ namespace ASLTv1.Services
                     PerfLog.LastGen2Count = gen2Now;
                 }
 
-                // PerfLog: 디코드 ms 측정 — sequential discard reads (Phase 4) + 최종 target Read 합산.
-                // gap=1 (adjacent) 인 경우는 discard 없이 단일 Read.
+                // PerfLog: 디코드 ms 측정 — 첫 Read 만 측정 (retry loop 는 의도된 fallback 으로 신호 가치 없음)
                 long decodeMs = 0;
                 Stopwatch? swDecode = PerfLog.Enabled ? Stopwatch.StartNew() : null;
-                if (canSequential)
-                {
-                    // gap-1 discard reads — decoder pipeline 을 target frame 직전까지 진행.
-                    for (int i = 0; i < gap - 1; i++)
-                    {
-                        videoCapture.Read(currentFrame);
-                    }
-                }
-                videoCapture.Read(currentFrame);  // 최종 target frame
+                videoCapture.Read(currentFrame);
                 if (swDecode != null)
                 {
                     swDecode.Stop();
