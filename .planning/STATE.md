@@ -63,7 +63,7 @@ None — milestone 종료. 다음 milestone 의 fresh requirements 는 `/gsd:new
 | 260512-m02 | 실제 timer fix — Windows.Forms.Timer Interval 33→8 + lastFrameTime drift 누적 차단 (22fps→30fps 회복) | 2026-05-12 | ccf1218 | [260512-m02](./quick/260512-m02-real-timer-fix-interval-8-lastframetime-/) |
 | 260512-sek | Seek cascade fix — 재생 중 사용자 seek 시 lastFrameTime 리셋으로 cold seek 폭주 차단 (15 user-seek paths) | 2026-05-12 | 5414a5c | (inline fix, PLAN not split) |
 | 260512-v04 | Version bump 1.0.3 → 1.0.4 + installer 재빌드 (perf 개선 누적 반영) | 2026-05-12 | 49b8319 | (inline) |
-| 260512-gsv | GS인증 측 보고 — Shift+>/< 배속 단축키 textbox 포커스 시 차단 → ProcessCmdKey 로 이동하여 포커스 무관 작동 | 2026-05-12 | pending | [260512-gsv](./quick/260512-gsv-shortcut-speed-shift-period-comma/) |
+| 260512-gsv | GS인증 측 보고 — Shift+>/< 배속 단축키 textbox 포커스 시 차단 → ProcessCmdKey 로 이동하여 포커스 무관 작동 | 2026-05-12 | 48b7f5b | [260512-gsv](./quick/260512-gsv-shortcut-speed-shift-period-comma/) |
 
 ## Session Continuity
 

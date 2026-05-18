@@ -2,7 +2,7 @@
 slug: 260512-gsv-shortcut-speed-shift-period-comma
 status: complete
 completed: 2026-05-12
-commit: pending
+commit: 48b7f5b
 ---
 
 # SUMMARY — Shift+>/< 배속 단축키 수정
