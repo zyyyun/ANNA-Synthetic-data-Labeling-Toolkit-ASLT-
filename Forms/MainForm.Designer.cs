@@ -43,7 +43,7 @@ namespace ASLTv1.Forms
 
             // Center Video Area
             this.panelCenter = new System.Windows.Forms.Panel();
-            this.pictureBoxVideo = new System.Windows.Forms.PictureBox();
+            this.pictureBoxVideo = new ASLTv1.Forms.FastPictureBox();
 
             // Video Controls (Bottom)
             this.panelVideoControls = new System.Windows.Forms.Panel();
@@ -817,7 +817,7 @@ namespace ASLTv1.Forms
 
         // Center Video
         private System.Windows.Forms.Panel panelCenter;
-        private System.Windows.Forms.PictureBox pictureBoxVideo;
+        private ASLTv1.Forms.FastPictureBox pictureBoxVideo;
 
         // Video Controls
         private System.Windows.Forms.Panel panelVideoControls;
