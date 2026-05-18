@@ -10,6 +10,16 @@ namespace ASLTv1
         [STAThread]
         static void Main()
         {
+            // 260512-pf6 Task A: OpenCV 의 FFmpeg backend 가 H.264 디코더를 multi-thread 로 사용하도록 설정.
+            // VideoCapture 가 생성되기 전 (Environment 단계) 에 설정해야 효과 있음 — 생성 후 변경은 무시됨.
+            // "threads;0" 은 FFmpeg 에 자동 코어 검출 위임 — 보통 (logical core 수) 만큼 사용.
+            // 효과: 1080p H.264 sequential decode 8ms → 2-4ms 예상 (CPU 코어 수에 비례).
+            // GPU/외부 SDK 없이 순수 CPU 멀티스레드 활용. 4x 재생 cycle 의 decode 비용 절반 이하로 감소.
+            Environment.SetEnvironmentVariable(
+                "OPENCV_FFMPEG_CAPTURE_OPTIONS",
+                "threads;0",
+                EnvironmentVariableTarget.Process);
+
             LogService.Initialize();
             LogService.AuditAppStart();
 
