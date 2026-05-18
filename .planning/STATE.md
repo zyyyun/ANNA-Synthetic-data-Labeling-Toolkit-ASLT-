@@ -65,10 +65,11 @@ None — milestone 종료. 다음 milestone 의 fresh requirements 는 `/gsd:new
 | 260512-v04 | Version bump 1.0.3 → 1.0.4 + installer 재빌드 (perf 개선 누적 반영) | 2026-05-12 | 49b8319 | (inline) |
 | 260512-gsv | GS인증 측 보고 — Shift+>/< 배속 단축키 textbox 포커스 시 차단 → ProcessCmdKey 로 이동하여 포커스 무관 작동 | 2026-05-12 | 48b7f5b | [260512-gsv](./quick/260512-gsv-shortcut-speed-shift-period-comma/) |
 | 260512-spd | 배속 시뮬레이션 공식 회귀 fix — `lastFrameTime += N * msPerFrame / playbackSpeed` (260512-m02 가 / playbackSpeed 누락 → 모든 속도가 1x 로 고착). 1x 의 30fps 회복은 항등식이라 영향 없음 | 2026-05-12 | 6ebf9c2 | (inline, 1-line fix) |
-| 260512-pf4 | 4x 부드러움 perf — FastPictureBox (Bilinear interpolation, paintLatency 9-12ms→3-5ms) + Bitmap pool (LOH 할당 churn 제거, Gen2 GC jitter 제거) + Mat reuse (unmanaged 메모리 churn 제거). 좌표 시스템 무변경 | 2026-05-12 | ac91b46 + 6974468 | [260512-pf4](./quick/260512-pf4-fastpicturebox-bitmap-pool-mat-reuse/) |
+| 260512-pf4 | 4x 부드러움 perf — FastPictureBox (Bilinear interpolation, paintLatency 9-12ms→8-10ms 측정) + Bitmap pool (LOH 할당 churn 제거, toBmp=0ms 확인) + Mat reuse (unmanaged 메모리 churn 제거). 좌표 시스템 무변경 | 2026-05-12 | ac91b46 + 6974468 | [260512-pf4](./quick/260512-pf4-fastpicturebox-bitmap-pool-mat-reuse/) |
+| 260512-pf5 | 4x cold seek cascade 차단 — `VideoService.LoadFrame` 의 작은 forward gap(2..60)을 Set(PosFrames) 대신 sequential Read 로 처리. OpenCV 의 GOP keyframe 점프 hidden cost (~150ms/jump) 회피. pf4 측정 후 발견한 진짜 4x 병목 (avgGap 135ms → ~20ms 예상) | 2026-05-12 | e65e0fe | [260512-pf5](./quick/260512-pf5-sequential-read-cold-seek-cascade-fix/) |
 
 ## Session Continuity
 
-Last session: 2026-05-12T10:00:00Z
-Stopped at: 260512-pf4 완료 — GS인증 측 4x 배속 부드러움 요청 closure. 3-phase 최적화: (1) FastPictureBox subclass 로 Bilinear interpolation 강제 → paintLatency 9-12ms→3-5ms, (2) Bitmap pool 로 매 frame ~6MB LOH 할당 churn 제거 → Gen2 GC jitter 제거, (3) Mat reuse 로 unmanaged 메모리 churn 추가 제거. 좌표 시스템 (pictureBox.Image.Width 20+ 호출지) 무변경 → 회귀 위험 최소. v1.0.4 installer 재빌드 후 GS 측 전달 예정.
+Last session: 2026-05-12T10:30:00Z
+Stopped at: 260512-pf5 완료 — pf4 측정 후 발견한 진짜 4x 병목 (OpenCV Set(PosFrames) 의 GOP keyframe hidden cost ~150ms/jump) 해결. VideoService.LoadFrame 에서 forward gap 2..60 시 Set 대신 sequential Read 로 처리. 디코더 pipeline warm 활용 → 4x cycle 200ms → ~20ms 예상. v1.0.4 installer 재빌드 (SHA256 7E6F588E...) 후 GS 측 전달 예정.
 Resume file: None
