@@ -4,7 +4,7 @@ milestone: v1.0.3
 milestone_name: JSON 저장 결함 수정 (KTC 2차)
 status: shipped
 shipped_at: 2026-05-06
-last_updated: "2026-05-12T06:55:00Z"
+last_updated: "2026-05-12T09:00:00Z"
 last_activity: 2026-05-12
 progress:
   total_phases: 1
@@ -61,9 +61,12 @@ None — milestone 종료. 다음 milestone 의 fresh requirements 는 `/gsd:new
 | 260512-ifn | 영상 hot path perf 진단 계측 (PerfLog + F12 토글, LoadFrame/Paint/MouseMove) | 2026-05-12 | cb8d7f7 | [260512-ifn](./quick/260512-ifn-perf-instrumentation-for-video-hot-paths/) |
 | 260512-kma | Timer 정밀도 수정 (timeBeginPeriod 1ms scheduler) + v2 jitter 계측 (Playback fps, paintLatency, gc2) | 2026-05-12 | 91a0b39 | [260512-kma](./quick/260512-kma-timer-fix-timebeginperiod-v2-jitter-inst/) |
 | 260512-m02 | 실제 timer fix — Windows.Forms.Timer Interval 33→8 + lastFrameTime drift 누적 차단 (22fps→30fps 회복) | 2026-05-12 | ccf1218 | [260512-m02](./quick/260512-m02-real-timer-fix-interval-8-lastframetime-/) |
+| 260512-sek | Seek cascade fix — 재생 중 사용자 seek 시 lastFrameTime 리셋으로 cold seek 폭주 차단 (15 user-seek paths) | 2026-05-12 | 5414a5c | (inline fix, PLAN not split) |
+| 260512-v04 | Version bump 1.0.3 → 1.0.4 + installer 재빌드 (perf 개선 누적 반영) | 2026-05-12 | 49b8319 | (inline) |
+| 260512-gsv | GS인증 측 보고 — Shift+>/< 배속 단축키 textbox 포커스 시 차단 → ProcessCmdKey 로 이동하여 포커스 무관 작동 | 2026-05-12 | pending | [260512-gsv](./quick/260512-gsv-shortcut-speed-shift-period-comma/) |
 
 ## Session Continuity
 
-Last session: 2026-05-12T06:55:00Z
-Stopped at: Quick task 260512-m02 완료 — 260512-kma 의 timeBeginPeriod 효과 미미 측정 후 진짜 원인 발견 (1) Forms.Timer Interval=33 강제 ~45ms 반올림, (2) `lastFrameTime = currentTime` drift 버그 매 tick 14ms 손실 누적. 2 라인 fix (Interval 33→8, lastFrameTime 누적식). 다음 단계는 사용자가 빌드 후 F12 켜고 fhd_30fps_2h.mkv 재생 후 순차 재생 timestamp delta 가 ~33ms 로 떨어지는지 확인.
+Last session: 2026-05-12T09:00:00Z
+Stopped at: 260512-gsv 완료 — GS인증 측에서 보고한 Shift+>/< 배속 단축키 미작동 이슈 closure. 근본 원인은 MainForm_KeyDown 의 textbox/combobox 포커스 가드 (Ctrl+숫자, Ctrl+N, Alt+숫자, Enter, Escape 만 화이트리스트) 가 Shift+OemPeriod/Oemcomma 를 차단. 화살표 키와 동일 패턴으로 ProcessCmdKey 로 이동하여 해결. v1.0.4 installer 재빌드 후 GS인증 측 전달 예정.
 Resume file: None

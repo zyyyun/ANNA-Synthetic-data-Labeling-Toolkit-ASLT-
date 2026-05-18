@@ -2858,6 +2858,30 @@ namespace ASLTv1.Forms
                 if (keyData == (Keys.Shift | Keys.Right)) { LoadFrame(Math.Min(_videoService.TotalFrames - 1, _videoService.CurrentFrameIndex + (int)(_videoService.Fps * 2))); return true; }
                 if (keyData == Keys.Left) { LoadFrame(Math.Max(0, _videoService.CurrentFrameIndex - (int)(_videoService.Fps * 5))); return true; }
                 if (keyData == Keys.Right) { LoadFrame(Math.Min(_videoService.TotalFrames - 1, _videoService.CurrentFrameIndex + (int)(_videoService.Fps * 5))); return true; }
+
+                // 260512-gsv: 배속 단축키 Shift+>(=Shift+OemPeriod) / Shift+<(=Shift+Oemcomma).
+                // MainForm_KeyDown 경로의 textbox/combobox 포커스 가드 (line ~2890) 가 화이트리스트에 없는
+                // 단축키를 차단했으므로 ProcessCmdKey 로 이동 — 포커스 위치 무관하게 항상 작동.
+                if (keyData == (Keys.Shift | Keys.OemPeriod))
+                {
+                    if (playbackSpeed < 1.0) playbackSpeed = 1.0;
+                    else if (playbackSpeed < 4.0) playbackSpeed = 4.0;
+                    else if (playbackSpeed < 8.0) playbackSpeed = 8.0;
+                    else if (playbackSpeed < 16.0) playbackSpeed = 16.0;
+                    if (isPlaying) lastFrameTime = DateTime.Now.Ticks / 10000;
+                    UpdateTimeLabels();
+                    return true;
+                }
+                if (keyData == (Keys.Shift | Keys.Oemcomma))
+                {
+                    if (playbackSpeed > 8.0) playbackSpeed = 8.0;
+                    else if (playbackSpeed > 4.0) playbackSpeed = 4.0;
+                    else if (playbackSpeed > 1.0) playbackSpeed = 1.0;
+                    else playbackSpeed = 0.5;
+                    if (isPlaying) lastFrameTime = DateTime.Now.Ticks / 10000;
+                    UpdateTimeLabels();
+                    return true;
+                }
             }
 
             // DF-1-06 (D-12): Tab / Shift+Tab 를 WinForms 기본 버튼 네비게이션보다 먼저 가로챈다.
@@ -3053,18 +3077,7 @@ namespace ASLTv1.Forms
             //   (구 구현: `if (e.KeyCode == Keys.Tab) { CycleSelection(e.Shift); e.Handled = true; return; }`)
             if (e.KeyCode == Keys.Space) { btnPlay_Click(sender, e); e.Handled = true; }
             else if (e.KeyCode == Keys.C && !e.Control) { btnToggleSubtitle_Click(sender, e); e.Handled = true; }
-            else if (e.Shift && e.KeyCode == Keys.OemPeriod)
-            {
-                if (playbackSpeed < 1.0) playbackSpeed = 1.0; else if (playbackSpeed < 4.0) playbackSpeed = 4.0; else if (playbackSpeed < 8.0) playbackSpeed = 8.0; else if (playbackSpeed < 16.0) playbackSpeed = 16.0;
-                if (isPlaying) lastFrameTime = DateTime.Now.Ticks / 10000;
-                UpdateTimeLabels(); e.Handled = true;
-            }
-            else if (e.Shift && e.KeyCode == Keys.Oemcomma)
-            {
-                if (playbackSpeed > 8.0) playbackSpeed = 8.0; else if (playbackSpeed > 4.0) playbackSpeed = 4.0; else if (playbackSpeed > 1.0) playbackSpeed = 1.0; else playbackSpeed = 0.5;
-                if (isPlaying) lastFrameTime = DateTime.Now.Ticks / 10000;
-                UpdateTimeLabels(); e.Handled = true;
-            }
+            // 260512-gsv: Shift+OemPeriod / Shift+Oemcomma 배속 단축키는 ProcessCmdKey 로 이동 — textbox 포커스 가드 우회.
             else if (selectedBox != null && !e.Control && (e.KeyCode == Keys.W || e.KeyCode == Keys.A || e.KeyCode == Keys.S || e.KeyCode == Keys.D))
             {
                 int moveAmount = e.Shift ? 10 : 2;
