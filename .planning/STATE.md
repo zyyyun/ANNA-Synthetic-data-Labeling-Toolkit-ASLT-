@@ -67,10 +67,11 @@ None — milestone 종료. 다음 milestone 의 fresh requirements 는 `/gsd:new
 | 260512-spd | 배속 시뮬레이션 공식 회귀 fix — `lastFrameTime += N * msPerFrame / playbackSpeed` (260512-m02 가 / playbackSpeed 누락 → 모든 속도가 1x 로 고착). 1x 의 30fps 회복은 항등식이라 영향 없음 | 2026-05-12 | 6ebf9c2 | (inline, 1-line fix) |
 | 260512-pf4 | 4x 부드러움 perf — FastPictureBox (Bilinear interpolation, paintLatency 9-12ms→8-10ms 측정) + Bitmap pool (LOH 할당 churn 제거, toBmp=0ms 확인) + Mat reuse (unmanaged 메모리 churn 제거). 좌표 시스템 무변경 | 2026-05-12 | ac91b46 + 6974468 | [260512-pf4](./quick/260512-pf4-fastpicturebox-bitmap-pool-mat-reuse/) |
 | 260512-pf5 | 4x cold seek cascade 차단 — `VideoService.LoadFrame` 의 작은 forward gap(2..60)을 Set(PosFrames) 대신 sequential Read 로 처리. **실측 결과 회귀 (fps 7.4→6.5) — pf6 에서 롤백.** | 2026-05-12 | e65e0fe (롤백됨) | [260512-pf5](./quick/260512-pf5-sequential-read-cold-seek-cascade-fix/) |
-| 260512-pf6 | pf5 롤백 + Task A 멀티스레드 디코드. (1) pf5 가설 회귀 확인 후 sequential read 로직 원복. (2) `OPENCV_FFMPEG_CAPTURE_OPTIONS=threads;0` 환경변수로 OpenCV FFmpeg 의 H.264 디코드를 logical core 수만큼 병렬화. 1080p decode 8ms → 2-4ms 예상. CPU-first 접근 (GPU/외부 SDK 도입 없음) | 2026-05-12 | b6d424e + 0b2d258 | [260512-pf6](./quick/260512-pf6-rollback-pf5-multithread-decode/) |
+| 260512-pf6 | pf5 롤백 + Task A 멀티스레드 디코드 시도. (1) pf5 가설 회귀 확인 후 sequential read 로직 원복. (2) `OPENCV_FFMPEG_CAPTURE_OPTIONS=threads;0` 환경변수 — **실측 효과 없음 (OpenCvSharp 번들 FFmpeg DLL 이 옵션 무시 추정). 환경변수는 무해해서 코드 유지.** | 2026-05-12 | b6d424e + 0b2d258 | [260512-pf6](./quick/260512-pf6-rollback-pf5-multithread-decode/) |
+| 260512-dec | **최종 설계 결정: 4x+ 배속은 frame skip 방식 채택**. 1x smooth (30fps) + 4x/8x/16x 는 timer 가 elapsed × speed / msPerFrame 으로 framesToMove 계산하여 Set(PosFrames) 점프 후 display — 산업계 표준 (VLC/YouTube/Premiere 동일). Task B (background producer thread) / Task C (OS hw decode) 는 v1.0.4 범위 밖, 다음 milestone 후보로 deferred. GS 측 단축키 보고 + 1x 부드러움 + 모든 기능 정확도는 충족. | 2026-05-12 | (no code change) | (decision only) |
 
 ## Session Continuity
 
-Last session: 2026-05-12T11:00:00Z
-Stopped at: 260512-pf6 완료 — pf5 (sequential read) 실측 회귀 확인 후 롤백 + CPU-first Task A 진입 (OpenCV FFmpeg 멀티스레드 디코드 환경변수 활성화). 메타 교훈: 성능 한계 시 GPU 점프 패턴 교정 — CPU 옵션 (멀티스레드, background thread, OS hw accel) 충분히 탐색 후 GPU 검토. Task A 검증 후 부족 시 Task B (background producer thread) 또는 Task C (OS hw decode) 순차 진행. v1.0.4 installer 재빌드 후 GS 측 전달 예정.
+Last session: 2026-05-12T11:30:00Z
+Stopped at: v1.0.4 final 결정 — 4x+ smooth playback 시도 (pf5 sequential, pf6 multi-thread) 모두 실측 효과 없음 확인 후, 사용자 결정으로 **frame skip 방식 (1x smooth + 4x+ skip) 채택**. 산업계 표준 동작 (VLC/YouTube 동일). 모든 다른 fix (단축키, 배속공식, seek cascade, FastPictureBox, Bitmap pool, Mat reuse) 유지. v1.0.4 final installer 빌드 후 GS 측 전달.
 Resume file: None
